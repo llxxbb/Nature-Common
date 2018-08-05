@@ -1,0 +1,6 @@
+[package]
+name = "nature_common"
+version = "0.0.1"
+authors = ["xuebin.li <llxxbb@yeah.net>"]
+
+[dependencies]
