@@ -1,7 +1,3 @@
-use std;
-
-pub type Result<T> = std::result::Result<T, NatureError>;
-
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum NatureError {
     // outer input verify errors

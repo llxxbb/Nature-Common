@@ -1,5 +1,4 @@
 use super::NatureError;
-use super::Result;
 
 /// `Thing`'s basic information
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Ord, PartialOrd)]
@@ -34,7 +33,7 @@ impl Default for Thing {
 
 impl Thing {
     /// prefix "/B(usiness)" to the head of the string,.to avoid outer use"/S(ystem)" prefix.
-    pub fn key_standardize(biz: &mut String) -> Result<()> {
+    pub fn key_standardize(biz: &mut String) -> Result<(),NatureError> {
         if biz.ends_with(PATH_SEPARATOR) {
             let last = biz.len() - 1;
             biz.remove(last);
