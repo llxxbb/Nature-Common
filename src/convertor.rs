@@ -1,7 +1,10 @@
 use super::Instance;
 
 pub enum ConverterReturned {
-    Error(String),
+    /// This will break process for ever.
+    LogicalError(String),
+    /// This can quick finish the process, and retry later.
+    EnvError,
     Delay(u32),
     Instances(Vec<Instance>),
 }
