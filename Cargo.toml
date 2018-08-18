@@ -1,7 +1,7 @@
 [package]
 name = "nature_common"
 version = "0.1.0"
-authors = ["xuebin.li <llxxbb@yeah.net>"]
+authors = ["xuebin.Li <llxxbb@yeah.net>"]
 
 [dependencies]
 serde = "1.0"
