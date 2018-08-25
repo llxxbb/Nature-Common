@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::iter::Iterator;
 use std::ops::Deref;
 use super::Thing;
 
@@ -19,6 +20,12 @@ impl Deref for Instance {
     }
 }
 
+impl Iterator for Instance {
+    type Item = Instance;
+    fn next(&mut self) -> Option<Self::Item> {
+        Some(self.clone())
+    }
+}
 
 /// A snapshot for a particular `Thing`
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
