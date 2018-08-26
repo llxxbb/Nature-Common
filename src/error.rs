@@ -18,7 +18,7 @@ pub enum NatureError {
     // internal errors
     DaoEnvironmentError(String),
     DaoLogicalError(String),
-    DaoDuplicated,
+    DaoDuplicated(String),
     R2D2Error(String),
     SystemError(String),
 }
