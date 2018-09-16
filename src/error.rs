@@ -1,3 +1,5 @@
+use serde_json;
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum NatureError {
     // outer input verify errors
@@ -22,3 +24,10 @@ pub enum NatureError {
     R2D2Error(String),
     SystemError(String),
 }
+
+impl From<serde_json::error::Error> for NatureError {
+    fn from(e: serde_json::error::Error) -> Self {
+        NatureError::SerializeError(e.to_string())
+    }
+}
+
