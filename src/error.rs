@@ -1,5 +1,7 @@
 use serde_json;
 use std;
+use std::fmt;
+use std::fmt::Formatter;
 use uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -45,3 +47,8 @@ impl From<std::num::ParseIntError> for NatureError {
     }
 }
 
+impl fmt::Display for NatureError {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
