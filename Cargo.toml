@@ -18,5 +18,4 @@ uuid = { version = "0.6", features = ["v3"] }
 log = "0.4.1"
 fern = "0.5"        # Simple, efficient logging
 
-#config
-config = "0.8"
+
