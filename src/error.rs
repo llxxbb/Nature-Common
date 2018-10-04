@@ -27,6 +27,7 @@ pub enum NatureError {
     DaoDuplicated(String),
     R2D2Error(String),
     SystemError(String),
+
 }
 
 impl From<serde_json::error::Error> for NatureError {
