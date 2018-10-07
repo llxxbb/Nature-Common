@@ -17,7 +17,7 @@ pub struct CallOutParameter {
     pub from: Instance,
     pub last_status: Option<Instance>,
     /// This is used for callback
-    pub carrier_id: u128,
+    pub carrier_id: Vec<u8>,
 }
 
 pub trait ConverterTrait {
