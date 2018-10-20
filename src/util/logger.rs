@@ -17,6 +17,7 @@ pub fn setup_logger() -> Result<(), fern::InitError> {
         })
         .level(log::LevelFilter::Debug)
         .level_for("tokio_core", log::LevelFilter::Error)
+        .level_for("tokio_reactor", log::LevelFilter::Error)
         .level_for("hyper", log::LevelFilter::Error)
         .chain(stdout())
         .chain(fern::log_file("output.log")?)
