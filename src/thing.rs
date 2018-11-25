@@ -1,5 +1,6 @@
-use super::NatureError;
 use ::Result;
+
+use super::NatureError;
 
 /// `Thing`'s basic information
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Ord, PartialOrd)]
@@ -47,6 +48,32 @@ impl Thing {
         }
         Ok(())
     }
+
+    /// version default to 1 and thing_type default to `Business`
+    pub fn new(key: String) -> Self {
+        Thing {
+            key,
+            version: 1,
+            thing_type: ThingType::Business,
+        }
+    }
+
+    /// version default to 1
+    pub fn new_with_type(key: String, thing_type: ThingType) -> Self {
+        Thing {
+            key,
+            version: 1,
+            thing_type,
+        }
+    }
+
+    pub fn new_with_version_and_type(key: String, version: i32, thing_type: ThingType) -> Self {
+        Thing {
+            key,
+            version,
+            thing_type,
+        }
+    }
 }
 
 /// separator for `Thing`'s key
@@ -58,11 +85,14 @@ pub static SYS_ROOT: &'static str = "/S";
 /// the root for business `Thing`
 pub static BIZ_ROOT: &'static str = "/B";
 
+/// the root for dynamic business `Thing`
+pub static DYNAMIC_ROOT: &'static str = "/D";
 
 /// Every `Thing` must have a type
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Ord, PartialOrd)]
 pub enum ThingType {
     Business,
     System,
+    Dynamic,
 }
 
