@@ -16,6 +16,7 @@ pub enum NatureError {
     // out converter errors
     ConverterLogicalError(String),
     ConverterEnvironmentError(String),
+    ConverterProtocalError(String),
 
     // Business Contract errors
     TargetInstanceNotIncludeStatus(String),
