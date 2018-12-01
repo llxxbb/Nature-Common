@@ -137,4 +137,16 @@ mod test {
         let rtn = Thing::new_with_type(key, ThingType::Dynamic);
         assert_eq!(rtn.unwrap().key, "/D/a/b/c");
     }
+
+    #[test]
+    fn key_cnt_be_null() {
+        let rtn = Thing::new(String::new());
+        match rtn.err().unwrap() {
+            NatureError::VerifyError(ss) => assert_eq!(ss, "key length can\'t be zero"),
+            err => {
+                println!("{:?}", err);
+                panic!("un match")
+            }
+        }
+    }
 }
