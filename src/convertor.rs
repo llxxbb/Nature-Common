@@ -72,4 +72,15 @@ pub struct Executor {
     pub protocol: Protocol,
     /// url do not contain's protocol define
     pub url: String,
+    /// weight in a certain `group`. if `group` is `None` then weight only take effect at the `OneStepFlow` which that `Executor` lived in.
+    pub weight: Option<Weight>,
+}
+
+/// used to gray deploy
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq)]
+pub struct Weight {
+    /// The weight will be share at the same `group` between `OneStepFlow`
+    pub group: Option<String>,
+    /// indicate the proportion of the whole stream, the whole will the sum of the participate `Weight::proportion`
+    pub proportion: u32,
 }
