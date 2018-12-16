@@ -1,5 +1,4 @@
 extern crate fern;
-extern crate log;
 extern crate chrono;
 
 use std::io::stdout;
@@ -22,5 +21,6 @@ pub fn setup_logger() -> Result<(), fern::InitError> {
         .chain(stdout())
         .chain(fern::log_file("output.log")?)
         .apply()?;
+    info!("--------------------Initialize logger---------------------");
     Ok(())
 }

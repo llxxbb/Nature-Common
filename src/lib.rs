@@ -3,6 +3,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate uuid;
+#[macro_use] extern crate log;
 
 pub use convertor::*;
 pub use error::*;
