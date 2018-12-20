@@ -52,17 +52,17 @@ impl Thing {
     }
 
     /// version default to 1 and thing_type default to `Business`
-    pub fn new(key: String) -> Result<Self> {
+    pub fn new(key: &str) -> Result<Self> {
         Self::new_with_version_and_type(key, 1, ThingType::Business)
     }
 
     /// version default to 1
-    pub fn new_with_type(key: String, thing_type: ThingType) -> Result<Self> {
+    pub fn new_with_type(key: &str, thing_type: ThingType) -> Result<Self> {
         Self::new_with_version_and_type(key, 1, thing_type)
     }
 
-    pub fn new_with_version_and_type(key: String, version: i32, thing_type: ThingType) -> Result<Self> {
-        let mut key = key;
+    pub fn new_with_version_and_type(key: &str, version: i32, thing_type: ThingType) -> Result<Self> {
+        let mut key = key.to_string();
         match Self::key_standardize(&mut key) {
             Err(e) => Err(e),
             Ok(_) => Ok(Thing {
@@ -103,7 +103,7 @@ mod test {
     fn standardize_empty() {
         println!("----------------- standardize_empty --------------------");
         let key = String::new();
-        let rtn = Thing::new(key);
+        let rtn = Thing::new(&key);
         if let Err(NatureError::VerifyError(x)) = rtn {
             assert_eq!(x, "key length can't be zero");
         } else {
@@ -111,7 +111,7 @@ mod test {
         }
 
         let key = "/".to_string();
-        let rtn = Thing::new(key);
+        let rtn = Thing::new(&key);
         if let Err(NatureError::VerifyError(x)) = rtn {
             assert_eq!(x, "key length can't be zero");
         } else {
@@ -124,7 +124,7 @@ mod test {
     fn standardize_no_separator_at_beginning() {
         println!("----------------- standardize_no_separator_at_beginning --------------------");
         let key = "a/b/c/".to_string();
-        let rtn = Thing::new(key);
+        let rtn = Thing::new(&key);
         assert_eq!(rtn.unwrap().key, "/B/a/b/c");
     }
 
@@ -132,15 +132,15 @@ mod test {
     fn thing_type_test() {
         println!("----------------- standardize_no_separator_at_beginning --------------------");
         let key = "a/b/c/".to_string();
-        let rtn = Thing::new_with_type(key.clone(), ThingType::System);
+        let rtn = Thing::new_with_type(&key.clone(), ThingType::System);
         assert_eq!(rtn.unwrap().key, "/S/a/b/c");
-        let rtn = Thing::new_with_type(key, ThingType::Dynamic);
+        let rtn = Thing::new_with_type(&key, ThingType::Dynamic);
         assert_eq!(rtn.unwrap().key, "/D/a/b/c");
     }
 
     #[test]
     fn key_cnt_be_null() {
-        let rtn = Thing::new(String::new());
+        let rtn = Thing::new(&String::new());
         match rtn.err().unwrap() {
             NatureError::VerifyError(ss) => assert_eq!(ss, "key length can\'t be zero"),
             err => {

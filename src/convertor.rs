@@ -33,7 +33,7 @@ pub struct DynamicConverter {
     /// Only `Dynamic` target support for security reason.
     pub to: Option<String>,
     /// REST api for convert to `to`
-    pub fun: Executor,
+    pub fun: ExecutorWithOptionWeight,
 }
 
 
@@ -73,14 +73,56 @@ pub struct Executor {
     /// url do not contain's protocol define
     pub url: String,
     /// weight in a certain `group`. if `group` is `None` then weight only take effect at the `OneStepFlow` which that `Executor` lived in.
-    pub weight: Option<Weight>,
+    pub weight: Weight,
+}
+
+impl From<(ExecutorWithOptionWeight, String)> for Executor {
+    fn from(e: (ExecutorWithOptionWeight, String)) -> Self {
+        let group: String;
+        let proportion: u32;
+        match e.0.weight {
+            None => {
+                group = e.1;
+                proportion = 1;
+            }
+            Some(se) => {
+                match se.group {
+                    None => group = e.1,
+                    Some(g) => group = g
+                }
+                proportion = se.proportion;
+            }
+        }
+        Executor {
+            protocol: e.0.protocol,
+            url: e.0.url,
+            weight: Weight {
+                group,
+                proportion,
+            },
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq)]
+pub struct ExecutorWithOptionWeight {
+    pub protocol: Protocol,
+    pub url: String,
+    pub weight: Option<WeightWithOptionGroup>,
 }
 
 /// used to gray deploy
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq)]
 pub struct Weight {
     /// The weight will be share at the same `group` between `OneStepFlow`
-    pub group: Option<String>,
+    pub group: String,
     /// indicate the proportion of the whole stream, the whole will the sum of the participate `Weight::proportion`
     pub proportion: u32,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq)]
+pub struct WeightWithOptionGroup {
+    pub group: Option<String>,
+    pub proportion: u32,
+}
+

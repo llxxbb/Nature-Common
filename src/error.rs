@@ -37,8 +37,8 @@ impl From<serde_json::error::Error> for NatureError {
     }
 }
 
-impl From<uuid::ParseError> for NatureError {
-    fn from(_e: uuid::ParseError) -> Self {
+impl From<uuid::parser::ParseError> for NatureError {
+    fn from(_e: uuid::parser::ParseError) -> Self {
         NatureError::UuidParseError
     }
 }

@@ -9,6 +9,7 @@ pub use convertor::*;
 pub use error::*;
 pub use instance::*;
 pub use thing::*;
+pub use util::*;
 
 mod convertor;
 mod error;

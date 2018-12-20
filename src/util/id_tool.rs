@@ -9,7 +9,7 @@ use ::Result;
 #[inline]
 pub fn generate_id<T: ?Sized + Serialize>(value: &T) -> Result<u128> {
     let json = serde_json::to_string(value)?;
-    let uuid = Uuid::new_v3(&NAMESPACE_DNS, &json);
+    let uuid = Uuid::new_v3(&Uuid::NAMESPACE_DNS, json.as_bytes());
     Ok(u128::from_ne_bytes(*uuid.as_bytes()))
 }
 
