@@ -1,15 +1,21 @@
+extern crate bincode;
 extern crate itertools;
 
 use serde::Serialize;
-use serde_json;
 use uuid::*;
 
+use ::NatureError;
 use ::Result;
+
+use self::bincode::serialize;
 
 #[inline]
 pub fn generate_id<T: ?Sized + Serialize>(value: &T) -> Result<u128> {
-    let json = serde_json::to_string(value)?;
-    let uuid = Uuid::new_v3(&Uuid::NAMESPACE_DNS, json.as_bytes());
+    let vec = match serialize(value) {
+        Err(e) => return Err(NatureError::SerializeError(e.to_string())),
+        Ok(rtn) => rtn
+    };
+    let uuid = Uuid::new_v3(&Uuid::NAMESPACE_DNS, &vec);
     Ok(u128::from_ne_bytes(*uuid.as_bytes()))
 }
 
@@ -29,7 +35,7 @@ pub fn vec_to_u128(vec: &Vec<u8>) -> u128 {
 #[inline]
 pub fn vec_to_hex_string(vec: &[u8]) -> String {
     use self::itertools::Itertools;
-    vec.iter().format("", |e, f| f(&format_args!("{:02x}", e))).to_string()
+    vec.iter().format_with("", |e, f| f(&format_args!("{:02x}", e))).to_string()
 }
 
 #[cfg(test)]

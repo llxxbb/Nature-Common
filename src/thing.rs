@@ -29,7 +29,7 @@ impl Default for Thing {
     fn default() -> Self {
         Thing {
             key: ThingType::Business.get_prefix() + &String::default(),
-            version: 0,
+            version: 1,
             thing_type: ThingType::Business,
         }
     }
