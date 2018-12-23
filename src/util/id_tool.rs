@@ -1,21 +1,14 @@
-extern crate bincode;
 extern crate itertools;
 
 use serde::Serialize;
+use serde_json;
 use uuid::*;
 
-use ::NatureError;
 use ::Result;
-
-use self::bincode::serialize;
 
 #[inline]
 pub fn generate_id<T: ?Sized + Serialize>(value: &T) -> Result<u128> {
-    let vec = match serialize(value) {
-        Err(e) => return Err(NatureError::SerializeError(e.to_string())),
-        Ok(rtn) => rtn
-    };
-    let uuid = Uuid::new_v3(&Uuid::NAMESPACE_DNS, &vec);
+    let uuid = Uuid::new_v3(&Uuid::NAMESPACE_DNS, &serde_json::to_vec(value)?);
     Ok(u128::from_ne_bytes(*uuid.as_bytes()))
 }
 
