@@ -107,7 +107,11 @@ impl From<(ExecutorWithOptionWeight, String)> for Executor {
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq)]
 pub struct ExecutorWithOptionWeight {
     pub protocol: Protocol,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default)]
     pub url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub weight: Option<WeightWithOptionGroup>,
 }
 
@@ -122,7 +126,45 @@ pub struct Weight {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq)]
 pub struct WeightWithOptionGroup {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub group: Option<String>,
+    #[serde(skip_serializing_if = "is_zero")]
+    #[serde(default)]
     pub proportion: u32,
 }
 
+fn is_zero(num: &u32) -> bool {
+    *num == 0
+}
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn serde_executor_with_option_weight() {
+        let mut ewe = ExecutorWithOptionWeight {
+            protocol: Protocol::LocalRust,
+            url: "".to_string(),
+            weight: Some(WeightWithOptionGroup {
+                group: None,
+                proportion: 0,
+            }),
+        };
+        let ewe_s = serde_json::to_string(&ewe).unwrap();
+        assert_eq!(ewe_s, "{\"protocol\":\"LocalRust\",\"weight\":{}}");
+        ewe.weight = Some(WeightWithOptionGroup {
+            group: None,
+            proportion: 5,
+        });
+        let ewe_s = serde_json::to_string(&ewe).unwrap();
+        assert_eq!(ewe_s, "{\"protocol\":\"LocalRust\",\"weight\":{\"proportion\":5}}");
+        let ewe_dw: ExecutorWithOptionWeight = serde_json::from_str(&ewe_s).unwrap();
+        assert_eq!(ewe, ewe_dw);
+        let ewe_s = "{\"protocol\":\"LocalRust\",\"weight\":{}}";
+        let ewe_dw: ExecutorWithOptionWeight = serde_json::from_str(&ewe_s).unwrap();
+        assert_eq!(ewe_dw.weight.unwrap().proportion, 0);
+    }
+}
