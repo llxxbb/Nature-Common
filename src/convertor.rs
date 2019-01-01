@@ -33,11 +33,11 @@ pub struct DynamicConverter {
     /// Only `Dynamic` target support for security reason.
     pub to: Option<String>,
     /// REST api for convert to `to`
-    pub fun: ExecutorWithOptionWeight,
+    pub fun: Executor,
 }
 
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Ord, PartialOrd, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Ord, PartialOrd, Eq, Hash)]
 pub enum Protocol {
     LocalRust,
     Http,
@@ -67,73 +67,24 @@ impl Default for Protocol {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq)]
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq, Hash)]
 pub struct Executor {
-    pub protocol: Protocol,
-    /// url do not contain's protocol define
-    pub url: String,
-    /// weight in a certain `group`. if `group` is `None` then weight only take effect at the `OneStepFlow` which that `Executor` lived in.
-    pub weight: Weight,
-}
-
-impl From<(ExecutorWithOptionWeight, String)> for Executor {
-    fn from(e: (ExecutorWithOptionWeight, String)) -> Self {
-        let group: String;
-        let proportion: u32;
-        match e.0.weight {
-            None => {
-                group = e.1;
-                proportion = 1;
-            }
-            Some(se) => {
-                match se.group {
-                    None => group = e.1,
-                    Some(g) => group = g
-                }
-                proportion = se.proportion;
-            }
-        }
-        Executor {
-            protocol: e.0.protocol,
-            url: e.0.url,
-            weight: Weight {
-                group,
-                proportion,
-            },
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq)]
-pub struct ExecutorWithOptionWeight {
     pub protocol: Protocol,
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default)]
     pub url: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    // many different Executor can reside in a group. which control the executor's opportunity to be executed
+    #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default)]
-    pub weight: Option<WeightWithOptionGroup>,
-}
-
-/// used to gray deploy
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq)]
-pub struct Weight {
-    /// The weight will be share at the same `group` between `OneStepFlow`
     pub group: String,
-    /// indicate the proportion of the whole stream, the whole will the sum of the participate `Weight::proportion`
-    pub proportion: u32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq)]
-pub struct WeightWithOptionGroup {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(default)]
-    pub group: Option<String>,
     #[serde(skip_serializing_if = "is_zero")]
     #[serde(default)]
     pub proportion: u32,
 }
 
+/// This is only used for serialize
+#[allow(clippy::trivially_copy_pass_by_ref)]
 fn is_zero(num: &u32) -> bool {
     *num == 0
 }
@@ -145,26 +96,21 @@ mod test {
 
     #[test]
     fn serde_executor_with_option_weight() {
-        let mut ewe = ExecutorWithOptionWeight {
+        let mut ewe = Executor {
             protocol: Protocol::LocalRust,
             url: "".to_string(),
-            weight: Some(WeightWithOptionGroup {
-                group: None,
-                proportion: 0,
-            }),
+            group: "".to_string(),
+            proportion: 0,
         };
         let ewe_s = serde_json::to_string(&ewe).unwrap();
-        assert_eq!(ewe_s, "{\"protocol\":\"LocalRust\",\"weight\":{}}");
-        ewe.weight = Some(WeightWithOptionGroup {
-            group: None,
-            proportion: 5,
-        });
+        assert_eq!(ewe_s, "{\"protocol\":\"LocalRust\"}");
+        ewe.proportion = 5;
         let ewe_s = serde_json::to_string(&ewe).unwrap();
-        assert_eq!(ewe_s, "{\"protocol\":\"LocalRust\",\"weight\":{\"proportion\":5}}");
-        let ewe_dw: ExecutorWithOptionWeight = serde_json::from_str(&ewe_s).unwrap();
+        assert_eq!(ewe_s, "{\"protocol\":\"LocalRust\",\"proportion\":5}");
+        let ewe_dw: Executor = serde_json::from_str(&ewe_s).unwrap();
         assert_eq!(ewe, ewe_dw);
-        let ewe_s = "{\"protocol\":\"LocalRust\",\"weight\":{}}";
-        let ewe_dw: ExecutorWithOptionWeight = serde_json::from_str(&ewe_s).unwrap();
-        assert_eq!(ewe_dw.weight.unwrap().proportion, 0);
+        let ewe_s = "{\"protocol\":\"LocalRust\"}";
+        let ewe_dw: Executor = serde_json::from_str(&ewe_s).unwrap();
+        assert_eq!(ewe_dw.proportion, 0);
     }
 }
