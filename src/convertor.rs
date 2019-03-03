@@ -29,6 +29,7 @@ pub trait ConverterTrait {
     fn convert(para: CallOutParameter) -> ConverterReturned;
 }
 
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct DynamicConverter {
     /// Only `Dynamic` target support for security reason.
     pub to: Option<String>,

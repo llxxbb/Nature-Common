@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use std::iter::Iterator;
 use std::ops::Deref;
 use super::Thing;
+use convertor::DynamicConverter;
 
 /// A snapshot for a particular `Thing`
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
@@ -73,6 +74,12 @@ pub struct SerialBatchInstance {
     pub thing: Thing,
     pub context_for_finish: String,
     pub instances: Vec<Instance>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+pub struct SelfRouteInstance {
+    pub instance: Instance,
+    pub converter: Vec<DynamicConverter>,
 }
 
 

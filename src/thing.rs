@@ -23,6 +23,9 @@ pub struct Thing {
 
     /// A `Thing`'s type
     pub thing_type: ThingType,
+
+    /// indicate the `Thing` is meaning nothing.
+    pub is_null: bool,
 }
 
 impl Default for Thing {
@@ -31,6 +34,7 @@ impl Default for Thing {
             key: ThingType::Business.get_prefix() + &String::default(),
             version: 1,
             thing_type: ThingType::Business,
+            is_null: false,
         }
     }
 }
@@ -69,7 +73,17 @@ impl Thing {
                 key: thing_type.get_prefix() + &key,
                 version,
                 thing_type,
+                is_null: false,
             })
+        }
+    }
+
+    pub fn new_null() -> Thing {
+        Thing {
+            key: String::new(),
+            version: 0,
+            thing_type: ThingType::Business,
+            is_null: true,
         }
     }
 }
