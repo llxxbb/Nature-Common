@@ -23,9 +23,6 @@ pub struct Thing {
 
     /// A `Thing`'s type
     pub thing_type: ThingType,
-
-    /// indicate the `Thing` is meaning nothing.
-    pub is_null: bool,
 }
 
 impl Default for Thing {
@@ -34,7 +31,6 @@ impl Default for Thing {
             key: ThingType::Business.get_prefix() + &String::default(),
             version: 1,
             thing_type: ThingType::Business,
-            is_null: false,
         }
     }
 }
@@ -73,7 +69,6 @@ impl Thing {
                 key: thing_type.get_prefix() + &key,
                 version,
                 thing_type,
-                is_null: false,
             })
         }
     }
@@ -83,7 +78,6 @@ impl Thing {
             key: String::new(),
             version: 0,
             thing_type: ThingType::Business,
-            is_null: true,
         }
     }
 }
@@ -97,6 +91,7 @@ pub enum ThingType {
     Business,
     System,
     Dynamic,
+    Null,
 }
 
 impl ThingType {
@@ -105,6 +100,7 @@ impl ThingType {
             ThingType::Business => "/B".to_string(),
             ThingType::System => "/S".to_string(),
             ThingType::Dynamic => "/D".to_string(),
+            ThingType::Null => "/N".to_string(),
         }
     }
 }
@@ -150,6 +146,10 @@ mod test {
         assert_eq!(rtn.unwrap().key, "/S/a/b/c");
         let rtn = Thing::new_with_type(&key, ThingType::Dynamic);
         assert_eq!(rtn.unwrap().key, "/D/a/b/c");
+        let rtn = Thing::new_with_type(&key, ThingType::Business);
+        assert_eq!(rtn.unwrap().key, "/B/a/b/c");
+        let rtn = Thing::new_with_type(&key, ThingType::Null);
+        assert_eq!(rtn.unwrap().key, "/N/a/b/c");
     }
 
     #[test]
