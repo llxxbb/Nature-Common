@@ -2,11 +2,13 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::iter::Iterator;
 use std::ops::Deref;
-use super::Thing;
+
 use convertor::DynamicConverter;
 
+use super::Thing;
+
 /// A snapshot for a particular `Thing`
-#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct Instance {
     /// A unique value used to distinguish other instance
     pub id: u128,
@@ -29,7 +31,7 @@ impl Iterator for Instance {
 }
 
 /// A snapshot for a particular `Thing`
-#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct InstanceNoID {
     /// This instance's Type
     pub thing: Thing,
@@ -57,7 +59,7 @@ pub struct InstanceNoID {
     pub from: Option<FromInstance>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct FromInstance {
     pub thing: Thing,
     pub status_version: i32,
