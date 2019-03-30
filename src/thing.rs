@@ -110,7 +110,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn standardize_empty() {
+    fn key_can_not_be_null() {
         println!("----------------- standardize_empty --------------------");
         let key = String::new();
         let rtn = Thing::new(&key);
@@ -153,7 +153,7 @@ mod test {
     }
 
     #[test]
-    fn key_cnt_be_null() {
+    fn key_cat_be_null() {
         let rtn = Thing::new(&String::new());
         match rtn.err().unwrap() {
             NatureError::VerifyError(ss) => assert_eq!(ss, "key length can\'t be zero"),
