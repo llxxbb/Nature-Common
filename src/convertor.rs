@@ -31,7 +31,7 @@ pub trait ConverterTrait {
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct DynamicConverter {
-    /// Only `Dynamic` target support for security reason.
+    /// Only `Dynamic` and `Null` target supported for security reason.
     pub to: Option<String>,
     /// REST api for convert to `to`
     pub fun: Executor,

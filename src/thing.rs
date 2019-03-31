@@ -16,19 +16,23 @@ pub struct Thing {
     /// # Value Example
     ///
     /// /B/shop/order
-    pub key: String,
+    key: String,
+
+    /// key with `ThingType` prefix
+    ful_key: String,
 
     /// A `Thing` can be changed in future, the `version` will support this without effect the old ones
     pub version: i32,
 
     /// A `Thing`'s type
-    pub thing_type: ThingType,
+    thing_type: ThingType,
 }
 
 impl Default for Thing {
     fn default() -> Self {
         Thing {
-            key: ThingType::Business.get_prefix() + &String::default(),
+            key: String::new(),
+            ful_key: ThingType::Business.get_prefix(),
             version: 1,
             thing_type: ThingType::Business,
         }
@@ -65,20 +69,52 @@ impl Thing {
         let mut key = key.to_string();
         match Self::key_standardize(&mut key) {
             Err(e) => Err(e),
-            Ok(_) => Ok(Thing {
-                key: thing_type.get_prefix() + &key,
-                version,
-                thing_type,
+            Ok(_) => Ok({
+                Thing {
+                    key: key.clone(),
+                    ful_key: thing_type.get_prefix() + &key,
+                    version,
+                    thing_type,
+                }
             })
         }
     }
 
     pub fn new_null() -> Thing {
+        let thing_type = ThingType::Null;
         Thing {
             key: String::new(),
-            version: 0,
-            thing_type: ThingType::Business,
+            ful_key: thing_type.get_prefix(),
+            version: 1,
+            thing_type,
         }
+    }
+
+    pub fn get_key(&self) -> String {
+        self.key.clone()
+    }
+
+    pub fn get_full_key(&self) -> String {
+        self.ful_key.clone()
+    }
+
+    pub fn get_thing_type(&self) -> ThingType {
+        self.thing_type.clone()
+    }
+
+    pub fn from_full_key(fk: &str) -> Result<Thing> {
+        let err_msg = "illegal format for `full_key` : ".to_string() + fk.clone();
+        if fk == "/N" {
+            return Thing::new_with_type(fk, ThingType::Null);
+        }
+        if fk.len() < 3 {
+            return Err(NatureError::VerifyError(err_msg));
+        }
+        if &fk[2..3] != "/" {
+            return Err(NatureError::VerifyError(err_msg));
+        }
+        let thing_type = ThingType::from_prefix(&fk[0..2])?;
+        Thing::new_with_type(&fk[3..], thing_type)
     }
 }
 
@@ -101,6 +137,16 @@ impl ThingType {
             ThingType::System => "/S".to_string(),
             ThingType::Dynamic => "/D".to_string(),
             ThingType::Null => "/N".to_string(),
+        }
+    }
+
+    pub fn from_prefix(prefix: &str) -> Result<Self> {
+        match prefix {
+            "/B" => Ok(ThingType::Business),
+            "/S" => Ok(ThingType::System),
+            "/D" => Ok(ThingType::Dynamic),
+            "/N" => Ok(ThingType::Null),
+            _ => Err(NatureError::VerifyError("unknow prefix : [".to_string() + prefix + "]"))
         }
     }
 }
@@ -135,7 +181,9 @@ mod test {
         println!("----------------- standardize_no_separator_at_beginning --------------------");
         let key = "a/b/c/".to_string();
         let rtn = Thing::new(&key);
-        assert_eq!(rtn.unwrap().key, "/B/a/b/c");
+        assert_eq!("/a/b/c", rtn.unwrap().key);
+        let rtn = Thing::new(&key);
+        assert_eq!("/B/a/b/c", rtn.unwrap().get_full_key());
     }
 
     #[test]
@@ -143,13 +191,13 @@ mod test {
         println!("----------------- standardize_no_separator_at_beginning --------------------");
         let key = "a/b/c/".to_string();
         let rtn = Thing::new_with_type(&key.clone(), ThingType::System);
-        assert_eq!(rtn.unwrap().key, "/S/a/b/c");
+        assert_eq!(rtn.unwrap().get_full_key(), "/S/a/b/c");
         let rtn = Thing::new_with_type(&key, ThingType::Dynamic);
-        assert_eq!(rtn.unwrap().key, "/D/a/b/c");
+        assert_eq!(rtn.unwrap().get_full_key(), "/D/a/b/c");
         let rtn = Thing::new_with_type(&key, ThingType::Business);
-        assert_eq!(rtn.unwrap().key, "/B/a/b/c");
+        assert_eq!(rtn.unwrap().get_full_key(), "/B/a/b/c");
         let rtn = Thing::new_with_type(&key, ThingType::Null);
-        assert_eq!(rtn.unwrap().key, "/N/a/b/c");
+        assert_eq!(rtn.unwrap().get_full_key(), "/N/a/b/c");
     }
 
     #[test]
@@ -162,5 +210,29 @@ mod test {
                 panic!("un match")
             }
         }
+    }
+
+    #[test]
+    fn from_profix() {
+        assert_eq!(ThingType::Null, ThingType::from_prefix("/N").unwrap());
+        assert_eq!(ThingType::Business, ThingType::from_prefix("/B").unwrap());
+        assert_eq!(ThingType::System, ThingType::from_prefix("/S").unwrap());
+        assert_eq!(ThingType::Dynamic, ThingType::from_prefix("/D").unwrap());
+        assert_eq!(Err(NatureError::VerifyError("unknow prefix : [/d]".to_string())), ThingType::from_prefix("/d"));
+    }
+
+    #[test]
+    fn get_thing_from_full_key() {
+        // error full_key
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : ".to_string())), Thing::from_full_key(""));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /s".to_string())), Thing::from_full_key("/s"));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /ss".to_string())), Thing::from_full_key("/ss"));
+        assert_eq!(Err(NatureError::VerifyError("unknow prefix : [/s]".to_string())), Thing::from_full_key("/s/s"));
+        assert_eq!(Thing::new_with_type("/N", ThingType::Null), Thing::from_full_key("/N"));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /Na".to_string())), Thing::from_full_key("/Na"));
+        assert_eq!(Thing::new_with_type("/a", ThingType::Null), Thing::from_full_key("/N/a"));
+        assert_eq!(Thing::new_with_type("/hello", ThingType::Dynamic), Thing::from_full_key("/D/hello"));
+        assert_eq!(Thing::new_with_type("/world", ThingType::System), Thing::from_full_key("/S/world"));
+        assert_eq!(Thing::new_with_type("/my", ThingType::Business), Thing::from_full_key("/B/my"));
     }
 }
