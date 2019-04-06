@@ -83,6 +83,16 @@ pub struct Executor {
     #[serde(default)]
     pub proportion: u32,
 }
+impl Executor{
+    pub fn for_local(path : &str) -> Self{
+        Executor{
+            protocol: Protocol::LocalRust,
+            url: path.to_string(),
+            group: "".to_string(),
+            proportion: 0
+        }
+    }
+}
 
 /// This is only used for serialize
 #[allow(clippy::trivially_copy_pass_by_ref)]

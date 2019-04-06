@@ -4,6 +4,8 @@ use std::iter::Iterator;
 use std::ops::Deref;
 
 use crate::convertor::DynamicConverter;
+use crate::Result;
+use crate::thing_type::ThingType;
 
 use super::Thing;
 
@@ -16,11 +18,11 @@ pub struct Instance {
 }
 
 impl Instance {
-    pub fn new(key: &str) -> Self {
-        Instance {
+    pub fn new(key: &str) -> Result<Self> {
+        Ok(Instance {
             id: 0,
             data: InstanceNoID {
-                thing: Thing::new(key).unwrap(),
+                thing: Thing::new(key)?,
                 event_time: 0,
                 execute_time: 0,
                 create_time: 0,
@@ -30,7 +32,24 @@ impl Instance {
                 status_version: 0,
                 from: None,
             },
-        }
+        })
+    }
+
+    pub fn new_with_type(key: &str, thing_type: ThingType) -> Result<Self> {
+        Ok(Instance {
+            id: 0,
+            data: InstanceNoID {
+                thing: Thing::new_with_type(key, thing_type)?,
+                event_time: 0,
+                execute_time: 0,
+                create_time: 0,
+                content: "".to_string(),
+                context: HashMap::new(),
+                status: HashSet::new(),
+                status_version: 0,
+                from: None,
+            },
+        })
     }
 }
 

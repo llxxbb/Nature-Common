@@ -1,5 +1,6 @@
 use super::NatureError;
 use super::Result;
+use super::ThingType;
 
 /// `Thing`'s basic information
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Ord, PartialOrd)]
@@ -65,6 +66,9 @@ impl Thing {
     }
 
     pub fn new_with_version_and_type(key: &str, version: i32, thing_type: ThingType) -> Result<Self> {
+        if thing_type == ThingType::Null {
+            return Ok(Self::new_null());
+        }
         let mut key = key.to_string();
         match Self::key_standardize(&mut key) {
             Err(e) => Err(e),
@@ -124,35 +128,6 @@ impl Thing {
 /// separator for `Thing`'s key
 static PATH_SEPARATOR: char = '/';
 
-/// Every `Thing` must have a type
-#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Ord, PartialOrd)]
-pub enum ThingType {
-    Business,
-    System,
-    Dynamic,
-    Null,
-}
-
-impl ThingType {
-    pub fn get_prefix(&self) -> String {
-        match self {
-            ThingType::Business => "/B".to_string(),
-            ThingType::System => "/S".to_string(),
-            ThingType::Dynamic => "/D".to_string(),
-            ThingType::Null => "/N".to_string(),
-        }
-    }
-
-    pub fn from_prefix(prefix: &str) -> Result<Self> {
-        match prefix {
-            "/B" => Ok(ThingType::Business),
-            "/S" => Ok(ThingType::System),
-            "/D" => Ok(ThingType::Dynamic),
-            "/N" => Ok(ThingType::Null),
-            _ => Err(NatureError::VerifyError("unknow prefix : [".to_string() + prefix + "]"))
-        }
-    }
-}
 
 #[cfg(test)]
 mod test {
@@ -160,7 +135,6 @@ mod test {
 
     #[test]
     fn key_can_not_be_null() {
-        println!("----------------- standardize_empty --------------------");
         let key = String::new();
         let rtn = Thing::new(&key);
         if let Err(NatureError::VerifyError(x)) = rtn {
@@ -178,6 +152,24 @@ mod test {
         }
     }
 
+    #[test]
+    fn key_can_be_empty_except_for_null_thing_type() {
+        // key is empty
+        let thing = Thing::new_with_type("", ThingType::Null).unwrap();
+        assert_eq!(ThingType::Null, thing.get_thing_type());
+        assert_eq!("/N", thing.get_full_key());
+
+        // key is not empty
+        let thing = Thing::new_with_type("not empty", ThingType::Null).unwrap();
+        assert_eq!(ThingType::Null, thing.get_thing_type());
+        assert_eq!("/N", thing.get_full_key());
+
+        // call `new_null` directly
+        let thing = Thing::new_null();
+        assert_eq!(ThingType::Null, thing.get_thing_type());
+        assert_eq!("/N", thing.get_full_key());
+    }
+
     /// also test for removing last separator and Business prefix
     #[test]
     fn standardize_no_separator_at_beginning() {
@@ -190,7 +182,7 @@ mod test {
     }
 
     #[test]
-    fn thing_type_test() {
+    fn get_full_key() {
         println!("----------------- standardize_no_separator_at_beginning --------------------");
         let key = "a/b/c/".to_string();
         let rtn = Thing::new_with_type(&key.clone(), ThingType::System);
@@ -200,32 +192,11 @@ mod test {
         let rtn = Thing::new_with_type(&key, ThingType::Business);
         assert_eq!(rtn.unwrap().get_full_key(), "/B/a/b/c");
         let rtn = Thing::new_with_type(&key, ThingType::Null);
-        assert_eq!(rtn.unwrap().get_full_key(), "/N/a/b/c");
+        assert_eq!(rtn.unwrap().get_full_key(), "/N");
     }
 
     #[test]
-    fn key_cat_be_null() {
-        let rtn = Thing::new(&String::new());
-        match rtn.err().unwrap() {
-            NatureError::VerifyError(ss) => assert_eq!(ss, "key length can\'t be zero"),
-            err => {
-                println!("{:?}", err);
-                panic!("un match")
-            }
-        }
-    }
-
-    #[test]
-    fn from_profix() {
-        assert_eq!(ThingType::Null, ThingType::from_prefix("/N").unwrap());
-        assert_eq!(ThingType::Business, ThingType::from_prefix("/B").unwrap());
-        assert_eq!(ThingType::System, ThingType::from_prefix("/S").unwrap());
-        assert_eq!(ThingType::Dynamic, ThingType::from_prefix("/D").unwrap());
-        assert_eq!(Err(NatureError::VerifyError("unknow prefix : [/d]".to_string())), ThingType::from_prefix("/d"));
-    }
-
-    #[test]
-    fn get_thing_from_full_key() {
+    fn from_full_key() {
         // error full_key
         assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : ".to_string())), Thing::from_full_key("", 1));
         assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /s".to_string())), Thing::from_full_key("/s", 1));

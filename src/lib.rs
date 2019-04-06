@@ -13,11 +13,13 @@ pub use error::*;
 pub use instance::*;
 pub use thing::*;
 pub use util::*;
+pub use thing_type::*;
 
 mod convertor;
 mod error;
 mod instance;
 mod thing;
+mod thing_type;
 
 pub mod util;
 
