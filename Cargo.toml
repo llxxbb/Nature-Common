@@ -2,6 +2,8 @@
 name = "nature_common"
 version = "0.1.0"
 authors = ["xuebin.Li <llxxbb@yeah.net>"]
+edition = "2018"
+workspace = "../Nature"
 
 [dependencies]
 

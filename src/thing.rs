@@ -1,6 +1,5 @@
-use ::Result;
-
 use super::NatureError;
+use super::Result;
 
 /// `Thing`'s basic information
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Ord, PartialOrd)]
@@ -19,7 +18,7 @@ pub struct Thing {
     key: String,
 
     /// key with `ThingType` prefix
-    ful_key: String,
+    full_key: String,
 
     /// A `Thing` can be changed in future, the `version` will support this without effect the old ones
     pub version: i32,
@@ -32,7 +31,7 @@ impl Default for Thing {
     fn default() -> Self {
         Thing {
             key: String::new(),
-            ful_key: ThingType::Business.get_prefix(),
+            full_key: ThingType::Business.get_prefix(),
             version: 1,
             thing_type: ThingType::Business,
         }
@@ -72,7 +71,7 @@ impl Thing {
             Ok(_) => Ok({
                 Thing {
                     key: key.clone(),
-                    ful_key: thing_type.get_prefix() + &key,
+                    full_key: thing_type.get_prefix() + &key,
                     version,
                     thing_type,
                 }
@@ -84,7 +83,7 @@ impl Thing {
         let thing_type = ThingType::Null;
         Thing {
             key: String::new(),
-            ful_key: thing_type.get_prefix(),
+            full_key: thing_type.get_prefix(),
             version: 1,
             thing_type,
         }
@@ -95,14 +94,18 @@ impl Thing {
     }
 
     pub fn get_full_key(&self) -> String {
-        self.ful_key.clone()
+        self.full_key.clone()
     }
 
     pub fn get_thing_type(&self) -> ThingType {
         self.thing_type.clone()
     }
+    pub fn set_thing_type(&mut self, thing_type: ThingType) {
+        self.thing_type = thing_type.clone();
+        self.full_key = thing_type.get_prefix() + &self.key.clone();
+    }
 
-    pub fn from_full_key(fk: &str) -> Result<Thing> {
+    pub fn from_full_key(fk: &str, version: i32) -> Result<Thing> {
         let err_msg = "illegal format for `full_key` : ".to_string() + fk.clone();
         if fk == "/N" {
             return Thing::new_with_type(fk, ThingType::Null);
@@ -114,7 +117,7 @@ impl Thing {
             return Err(NatureError::VerifyError(err_msg));
         }
         let thing_type = ThingType::from_prefix(&fk[0..2])?;
-        Thing::new_with_type(&fk[3..], thing_type)
+        Thing::new_with_version_and_type(&fk[3..], version, thing_type)
     }
 }
 
@@ -224,15 +227,15 @@ mod test {
     #[test]
     fn get_thing_from_full_key() {
         // error full_key
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : ".to_string())), Thing::from_full_key(""));
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /s".to_string())), Thing::from_full_key("/s"));
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /ss".to_string())), Thing::from_full_key("/ss"));
-        assert_eq!(Err(NatureError::VerifyError("unknow prefix : [/s]".to_string())), Thing::from_full_key("/s/s"));
-        assert_eq!(Thing::new_with_type("/N", ThingType::Null), Thing::from_full_key("/N"));
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /Na".to_string())), Thing::from_full_key("/Na"));
-        assert_eq!(Thing::new_with_type("/a", ThingType::Null), Thing::from_full_key("/N/a"));
-        assert_eq!(Thing::new_with_type("/hello", ThingType::Dynamic), Thing::from_full_key("/D/hello"));
-        assert_eq!(Thing::new_with_type("/world", ThingType::System), Thing::from_full_key("/S/world"));
-        assert_eq!(Thing::new_with_type("/my", ThingType::Business), Thing::from_full_key("/B/my"));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : ".to_string())), Thing::from_full_key("", 1));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /s".to_string())), Thing::from_full_key("/s", 1));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /ss".to_string())), Thing::from_full_key("/ss", 1));
+        assert_eq!(Err(NatureError::VerifyError("unknow prefix : [/s]".to_string())), Thing::from_full_key("/s/s", 1));
+        assert_eq!(Thing::new_with_type("/N", ThingType::Null), Thing::from_full_key("/N", 1));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /Na".to_string())), Thing::from_full_key("/Na", 1));
+        assert_eq!(Thing::new_with_type("/a", ThingType::Null), Thing::from_full_key("/N/a", 1));
+        assert_eq!(Thing::new_with_type("/hello", ThingType::Dynamic), Thing::from_full_key("/D/hello", 1));
+        assert_eq!(Thing::new_with_type("/world", ThingType::System), Thing::from_full_key("/S/world", 1));
+        assert_eq!(Thing::new_with_type("/my", ThingType::Business), Thing::from_full_key("/B/my", 1));
     }
 }

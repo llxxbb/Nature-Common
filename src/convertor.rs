@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
-use error::NatureError;
-use Result;
+use crate::error::NatureError;
+use crate::Result;
 
 use super::Instance;
 

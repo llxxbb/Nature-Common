@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::iter::Iterator;
 use std::ops::Deref;
 
-use convertor::DynamicConverter;
+use crate::convertor::DynamicConverter;
 
 use super::Thing;
 
@@ -13,6 +13,25 @@ pub struct Instance {
     /// A unique value used to distinguish other instance
     pub id: u128,
     pub data: InstanceNoID,
+}
+
+impl Instance {
+    pub fn new(key: &str) -> Self {
+        Instance {
+            id: 0,
+            data: InstanceNoID {
+                thing: Thing::new(key).unwrap(),
+                event_time: 0,
+                execute_time: 0,
+                create_time: 0,
+                content: "".to_string(),
+                context: HashMap::new(),
+                status: HashSet::new(),
+                status_version: 0,
+                from: None,
+            },
+        }
+    }
 }
 
 impl Deref for Instance {

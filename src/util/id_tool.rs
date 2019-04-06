@@ -4,7 +4,7 @@ use serde::Serialize;
 use serde_json;
 use uuid::*;
 
-use ::Result;
+use crate::Result;
 
 #[inline]
 pub fn generate_id<T: ?Sized + Serialize>(value: &T) -> Result<u128> {
@@ -33,7 +33,7 @@ pub fn vec_to_hex_string(vec: &[u8]) -> String {
 
 #[cfg(test)]
 mod test {
-    use util::id_tool::vec_to_hex_string;
+    use crate::util::id_tool::vec_to_hex_string;
 
     #[test]
     fn vec_to_hex_string_test() {
