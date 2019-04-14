@@ -18,6 +18,7 @@ pub enum ConverterReturned {
     Instances(Vec<Instance>),
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct CallOutParameter {
     pub from: Instance,
     pub last_status: Option<Instance>,
@@ -83,13 +84,14 @@ pub struct Executor {
     #[serde(default)]
     pub proportion: u32,
 }
-impl Executor{
-    pub fn for_local(path : &str) -> Self{
-        Executor{
+
+impl Executor {
+    pub fn for_local(path: &str) -> Self {
+        Executor {
             protocol: Protocol::LocalRust,
             url: path.to_string(),
             group: "".to_string(),
-            proportion: 0
+            proportion: 0,
         }
     }
 }
