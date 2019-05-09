@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use std::iter::Iterator;
 use std::ops::Deref;
 
+use crate::{generate_id, Result};
 use crate::convertor::DynamicConverter;
-use crate::Result;
 use crate::thing_type::ThingType;
 
 use super::Thing;
@@ -51,6 +51,20 @@ impl Instance {
             },
         })
     }
+
+    pub fn mut_biz(&mut self, thing_type: ThingType) {
+        self.data.thing.set_thing_type(thing_type);
+    }
+
+    pub fn fix_id(&mut self) -> Result<&mut Self> {
+        if self.id == 0 {
+            self.id = generate_id(&self.data)?;
+        }
+        Ok(self)
+    }
+//    pub fn save(&mut self) -> Result<u128>{
+//
+//    }
 }
 
 impl Deref for Instance {
@@ -122,4 +136,20 @@ pub struct SelfRouteInstance {
     pub converter: Vec<DynamicConverter>,
 }
 
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn id_generate() {
+        // TODO
+//        let mocks = MyMocks::new();
+//        let service = InstanceServiceImpl {
+//            define_cache: mocks.c_thing_define.clone()
+//        };
+//        let mut instance = Instance::new("hello").unwrap();
+//        service.id_generate_if_not_set(&mut instance).unwrap();
+//        println!("{:?}", instance.id);
+//        assert_eq!(instance.id, 336556392135652841283170827290494770821);
+    }
+}
 

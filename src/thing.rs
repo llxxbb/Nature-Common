@@ -123,6 +123,11 @@ impl Thing {
         let thing_type = ThingType::from_prefix(&fk[0..2])?;
         Thing::new_with_version_and_type(&fk[3..], version, thing_type)
     }
+
+    pub fn check<T, F>(&self, checker: F) -> Result<&Self> where F: Fn(&Thing) -> Result<T> {
+        checker(&self)?;
+        Ok(&self)
+    }
 }
 
 /// separator for `Thing`'s key
