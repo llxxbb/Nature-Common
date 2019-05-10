@@ -62,9 +62,7 @@ impl Instance {
         }
         Ok(self)
     }
-//    pub fn save(&mut self) -> Result<u128>{
-//
-//    }
+
 }
 
 impl Deref for Instance {
