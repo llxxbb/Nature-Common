@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::iter::Iterator;
 use std::ops::Deref;
 
-use crate::{generate_id, Result};
+use crate::{generate_id, NatureError, Result};
 use crate::convertor::DynamicConverter;
 use crate::thing_type::ThingType;
 
@@ -63,6 +63,20 @@ impl Instance {
         Ok(self)
     }
 
+    pub fn check_and_fix_id<T, F>(&mut self, checker: F) -> Result<&mut Self> where F: Fn(&Thing) -> Result<T> {
+        let _ = self.thing.check(|x| checker(x))?;
+        self.fix_id()
+    }
+
+    pub fn save<F>(&self, dao: F) -> Result<usize>
+        where F: Fn(&Instance) -> Result<usize>
+    {
+        match dao(self) {
+            Ok(num) => Ok(num),
+            Err(NatureError::DaoDuplicated(_)) => Ok(0),
+            Err(e) => Err(e)
+        }
+    }
 }
 
 impl Deref for Instance {
