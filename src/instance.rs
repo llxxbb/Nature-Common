@@ -63,7 +63,8 @@ impl Instance {
         Ok(self)
     }
 
-    pub fn check_and_fix_id<T, F>(&mut self, checker: F) -> Result<&mut Self> where F: Fn(&Thing) -> Result<T> {
+    pub fn check_and_fix_id<T, F>(&mut self, checker: F) -> Result<&mut Self>
+        where F: Fn(&Thing) -> Result<T> {
         let _ = self.thing.check(|x| checker(x))?;
         self.fix_id()
     }
@@ -129,18 +130,6 @@ pub struct FromInstance {
     pub status_version: i32,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct ParallelBatchInstance {
-    pub thing: Thing,
-    pub instances: Vec<Instance>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
-pub struct SerialBatchInstance {
-    pub thing: Thing,
-    pub context_for_finish: String,
-    pub instances: Vec<Instance>,
-}
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct SelfRouteInstance {

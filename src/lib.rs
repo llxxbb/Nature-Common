@@ -11,6 +11,8 @@ extern crate uuid;
 pub use convertor::*;
 pub use error::*;
 pub use instance::*;
+pub use parallel_batch_instance::*;
+pub use serial_batch_instance::*;
 pub use thing::*;
 pub use util::*;
 pub use thing_type::*;
@@ -20,6 +22,8 @@ mod error;
 mod instance;
 mod thing;
 mod thing_type;
+mod parallel_batch_instance;
+mod serial_batch_instance;
 
 pub mod util;
 
