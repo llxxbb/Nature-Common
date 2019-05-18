@@ -65,7 +65,7 @@ impl Instance {
 
     pub fn check_and_fix_id<T, F>(&mut self, checker: F) -> Result<&mut Self>
         where F: Fn(&Thing) -> Result<T> {
-        let _ = self.thing.check(|x| checker(x))?;
+        let _ = self.thing.check(checker)?;
         self.fix_id()
     }
 

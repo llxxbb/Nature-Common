@@ -124,9 +124,9 @@ impl Thing {
         Thing::new_with_version_and_type(&fk[3..], version, thing_type)
     }
 
-    pub fn check<T, F>(&self, checker: F) -> Result<&Self> where F: Fn(&Thing) -> Result<T> {
+    pub fn check<T, F>(&self, checker: F) -> Result<()> where F: Fn(&Thing) -> Result<T> {
         checker(&self)?;
-        Ok(&self)
+        Ok(())
     }
 }
 
