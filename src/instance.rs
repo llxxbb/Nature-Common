@@ -52,7 +52,7 @@ impl Instance {
         })
     }
 
-    pub fn mut_biz(&mut self, thing_type: ThingType) {
+    pub fn change_thing_type(&mut self, thing_type: ThingType) {
         self.data.thing.set_thing_type(thing_type);
     }
 
@@ -137,6 +137,20 @@ pub struct SelfRouteInstance {
     pub converter: Vec<DynamicConverter>,
 }
 
+impl SelfRouteInstance {
+    pub fn verify(&self) -> Result<()> {
+        if self.converter.is_empty() {
+            return Err(NatureError::VerifyError("converter must not empty for dynamic convert!".to_string()));
+        }
+        Ok(())
+    }
+    pub fn to_instance(&self) -> Instance {
+        Instance {
+            id: 0,
+            data: self.instance.data.clone(),
+        }
+    }
+}
 
 #[cfg(test)]
 mod test {
