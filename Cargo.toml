@@ -21,8 +21,4 @@ uuid = { version = "0.7", features = ["v3"] }
 log = "0.4.1"
 fern = "0.5"        # Simple, efficient logging
 
-# test
-[dev-dependencies]
-mockers_derive = "0.13"
-mockers = "0.13"
 

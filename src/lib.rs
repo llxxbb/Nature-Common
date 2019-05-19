@@ -5,8 +5,6 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate uuid;
-#[cfg(test)] extern crate mockers;
-#[cfg(test)] extern crate mockers_derive;
 
 pub use convertor::*;
 pub use error::*;
