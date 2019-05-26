@@ -1,6 +1,8 @@
 use std;
 use std::fmt;
 use std::fmt::Formatter;
+
+use actix::prelude::SendError;
 use uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -46,6 +48,12 @@ impl From<uuid::parser::ParseError> for NatureError {
 impl From<std::num::ParseIntError> for NatureError {
     fn from(_: std::num::ParseIntError) -> Self {
         NatureError::UuidParseError
+    }
+}
+
+impl<T> From<SendError<T>> for NatureError {
+    fn from(err: SendError<T>) -> Self {
+        NatureError::SystemError(err.to_string())
     }
 }
 
