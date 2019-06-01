@@ -21,6 +21,6 @@ pub fn setup_logger() -> Result<(), fern::InitError> {
         .chain(stdout())
         .chain(fern::log_file("output.log")?)
         .apply()?;
-    info!("--------------------Initialize logger---------------------");
+    info!("--------------------logger initialized---------------------");
     Ok(())
 }
