@@ -5,6 +5,11 @@ authors = ["xuebin.Li <llxxbb@yeah.net>"]
 edition = "2018"
 workspace = "../Nature"
 
+description = "Common defines which used by Nature"
+repository = "https://github.com/llxxbb/Nature-Common"
+license = "MIT"
+
+
 [dependencies]
 
 serde_json = "1.0"
