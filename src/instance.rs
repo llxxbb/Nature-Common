@@ -7,7 +7,7 @@ use crate::{generate_id, NatureError, Result};
 use crate::convertor::DynamicConverter;
 use crate::thing_type::ThingType;
 
-use super::Thing;
+use super::BizMeta;
 
 /// A snapshot for a particular `Thing`
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
@@ -22,7 +22,7 @@ impl Instance {
         Ok(Instance {
             id: 0,
             data: InstanceNoID {
-                thing: Thing::new(key)?,
+                thing: BizMeta::new(key)?,
                 event_time: 0,
                 execute_time: 0,
                 create_time: 0,
@@ -39,7 +39,7 @@ impl Instance {
         Ok(Instance {
             id: 0,
             data: InstanceNoID {
-                thing: Thing::new_with_type(key, thing_type)?,
+                thing: BizMeta::new_with_type(key, thing_type)?,
                 event_time: 0,
                 execute_time: 0,
                 create_time: 0,
@@ -64,7 +64,7 @@ impl Instance {
     }
 
     pub fn check_and_fix_id<T, F>(&mut self, checker: F) -> Result<&mut Self>
-        where F: Fn(&Thing) -> Result<T> {
+        where F: Fn(&BizMeta) -> Result<T> {
         let _ = self.thing.check(checker)?;
         self.fix_id()
     }
@@ -99,7 +99,7 @@ impl Iterator for Instance {
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct InstanceNoID {
     /// This instance's Type
-    pub thing: Thing,
+    pub thing: BizMeta,
     /// The time that this instance exists
     pub event_time: i64,
     /// The time which plan to flow for this instance
@@ -126,7 +126,7 @@ pub struct InstanceNoID {
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct FromInstance {
-    pub thing: Thing,
+    pub thing: BizMeta,
     pub status_version: i32,
 }
 
