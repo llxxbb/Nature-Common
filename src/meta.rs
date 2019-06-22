@@ -4,7 +4,7 @@ use super::ThingType;
 
 /// Business Metadata
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Ord, PartialOrd)]
-pub struct BizMeta {
+pub struct Meta {
     /// # Identify a `Thing`.
     ///
     /// A `Thing` may have a lots of `Instance`s, so it's a **Class** for Instance`.
@@ -28,9 +28,9 @@ pub struct BizMeta {
     thing_type: ThingType,
 }
 
-impl Default for BizMeta {
+impl Default for Meta {
     fn default() -> Self {
-        BizMeta {
+        Meta {
             key: String::new(),
             full_key: ThingType::Business.get_prefix(),
             version: 1,
@@ -39,7 +39,7 @@ impl Default for BizMeta {
     }
 }
 
-impl BizMeta {
+impl Meta {
     /// prefix "/B(usiness)" to the head of the string,.to avoid outer use"/S(ystem)" prefix.
     fn key_standardize(biz: &mut String) -> Result<()> {
         if biz.ends_with(PATH_SEPARATOR) {
@@ -73,7 +73,7 @@ impl BizMeta {
         match Self::key_standardize(&mut key) {
             Err(e) => Err(e),
             Ok(_) => Ok({
-                BizMeta {
+                Meta {
                     key: key.clone(),
                     full_key: thing_type.get_prefix() + &key,
                     version,
@@ -83,9 +83,9 @@ impl BizMeta {
         }
     }
 
-    pub fn new_null() -> BizMeta {
+    pub fn new_null() -> Meta {
         let thing_type = ThingType::Null;
-        BizMeta {
+        Meta {
             key: String::new(),
             full_key: thing_type.get_prefix(),
             version: 1,
@@ -109,10 +109,10 @@ impl BizMeta {
         self.full_key = thing_type.get_prefix() + &self.key.clone();
     }
 
-    pub fn from_full_key(fk: &str, version: i32) -> Result<BizMeta> {
+    pub fn from_full_key(fk: &str, version: i32) -> Result<Meta> {
         let err_msg = "illegal format for `full_key` : ".to_string() + fk.clone();
         if fk == "/N" {
-            return BizMeta::new_with_type(fk, ThingType::Null);
+            return Meta::new_with_type(fk, ThingType::Null);
         }
         if fk.len() < 3 {
             return Err(NatureError::VerifyError(err_msg));
@@ -121,10 +121,10 @@ impl BizMeta {
             return Err(NatureError::VerifyError(err_msg));
         }
         let thing_type = ThingType::from_prefix(&fk[0..2])?;
-        BizMeta::new_with_version_and_type(&fk[3..], version, thing_type)
+        Meta::new_with_version_and_type(&fk[3..], version, thing_type)
     }
 
-    pub fn check<T, F>(&self, checker: F) -> Result<()> where F: Fn(&BizMeta) -> Result<T> {
+    pub fn check<T, F>(&self, checker: F) -> Result<()> where F: Fn(&Meta) -> Result<T> {
         checker(&self)?;
         Ok(())
     }
@@ -141,7 +141,7 @@ mod test {
     #[test]
     fn key_can_not_be_null() {
         let key = String::new();
-        let rtn = BizMeta::new(&key);
+        let rtn = Meta::new(&key);
         if let Err(NatureError::VerifyError(x)) = rtn {
             assert_eq!(x, "key length can't be zero");
         } else {
@@ -149,7 +149,7 @@ mod test {
         }
 
         let key = "/".to_string();
-        let rtn = BizMeta::new(&key);
+        let rtn = Meta::new(&key);
         if let Err(NatureError::VerifyError(x)) = rtn {
             assert_eq!(x, "key length can't be zero");
         } else {
@@ -160,17 +160,17 @@ mod test {
     #[test]
     fn key_can_be_empty_except_for_null_thing_type() {
         // key is empty
-        let thing = BizMeta::new_with_type("", ThingType::Null).unwrap();
+        let thing = Meta::new_with_type("", ThingType::Null).unwrap();
         assert_eq!(ThingType::Null, thing.get_thing_type());
         assert_eq!("/N", thing.get_full_key());
 
         // key is not empty
-        let thing = BizMeta::new_with_type("not empty", ThingType::Null).unwrap();
+        let thing = Meta::new_with_type("not empty", ThingType::Null).unwrap();
         assert_eq!(ThingType::Null, thing.get_thing_type());
         assert_eq!("/N", thing.get_full_key());
 
         // call `new_null` directly
-        let thing = BizMeta::new_null();
+        let thing = Meta::new_null();
         assert_eq!(ThingType::Null, thing.get_thing_type());
         assert_eq!("/N", thing.get_full_key());
     }
@@ -180,9 +180,9 @@ mod test {
     fn standardize_no_separator_at_beginning() {
         println!("----------------- standardize_no_separator_at_beginning --------------------");
         let key = "a/b/c/".to_string();
-        let rtn = BizMeta::new(&key);
+        let rtn = Meta::new(&key);
         assert_eq!("/a/b/c", rtn.unwrap().key);
-        let rtn = BizMeta::new(&key);
+        let rtn = Meta::new(&key);
         assert_eq!("/B/a/b/c", rtn.unwrap().get_full_key());
     }
 
@@ -190,28 +190,28 @@ mod test {
     fn get_full_key() {
         println!("----------------- standardize_no_separator_at_beginning --------------------");
         let key = "a/b/c/".to_string();
-        let rtn = BizMeta::new_with_type(&key.clone(), ThingType::System);
+        let rtn = Meta::new_with_type(&key.clone(), ThingType::System);
         assert_eq!(rtn.unwrap().get_full_key(), "/S/a/b/c");
-        let rtn = BizMeta::new_with_type(&key, ThingType::Dynamic);
+        let rtn = Meta::new_with_type(&key, ThingType::Dynamic);
         assert_eq!(rtn.unwrap().get_full_key(), "/D/a/b/c");
-        let rtn = BizMeta::new_with_type(&key, ThingType::Business);
+        let rtn = Meta::new_with_type(&key, ThingType::Business);
         assert_eq!(rtn.unwrap().get_full_key(), "/B/a/b/c");
-        let rtn = BizMeta::new_with_type(&key, ThingType::Null);
+        let rtn = Meta::new_with_type(&key, ThingType::Null);
         assert_eq!(rtn.unwrap().get_full_key(), "/N");
     }
 
     #[test]
     fn from_full_key() {
         // error full_key
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : ".to_string())), BizMeta::from_full_key("", 1));
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /s".to_string())), BizMeta::from_full_key("/s", 1));
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /ss".to_string())), BizMeta::from_full_key("/ss", 1));
-        assert_eq!(Err(NatureError::VerifyError("unknow prefix : [/s]".to_string())), BizMeta::from_full_key("/s/s", 1));
-        assert_eq!(BizMeta::new_with_type("/N", ThingType::Null), BizMeta::from_full_key("/N", 1));
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /Na".to_string())), BizMeta::from_full_key("/Na", 1));
-        assert_eq!(BizMeta::new_with_type("/a", ThingType::Null), BizMeta::from_full_key("/N/a", 1));
-        assert_eq!(BizMeta::new_with_type("/hello", ThingType::Dynamic), BizMeta::from_full_key("/D/hello", 1));
-        assert_eq!(BizMeta::new_with_type("/world", ThingType::System), BizMeta::from_full_key("/S/world", 1));
-        assert_eq!(BizMeta::new_with_type("/my", ThingType::Business), BizMeta::from_full_key("/B/my", 1));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : ".to_string())), Meta::from_full_key("", 1));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /s".to_string())), Meta::from_full_key("/s", 1));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /ss".to_string())), Meta::from_full_key("/ss", 1));
+        assert_eq!(Err(NatureError::VerifyError("unknow prefix : [/s]".to_string())), Meta::from_full_key("/s/s", 1));
+        assert_eq!(Meta::new_with_type("/N", ThingType::Null), Meta::from_full_key("/N", 1));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /Na".to_string())), Meta::from_full_key("/Na", 1));
+        assert_eq!(Meta::new_with_type("/a", ThingType::Null), Meta::from_full_key("/N/a", 1));
+        assert_eq!(Meta::new_with_type("/hello", ThingType::Dynamic), Meta::from_full_key("/D/hello", 1));
+        assert_eq!(Meta::new_with_type("/world", ThingType::System), Meta::from_full_key("/S/world", 1));
+        assert_eq!(Meta::new_with_type("/my", ThingType::Business), Meta::from_full_key("/B/my", 1));
     }
 }
