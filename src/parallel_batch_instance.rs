@@ -2,6 +2,6 @@ use crate::{Instance, Meta};
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct TaskForParallel {
-    pub thing: Meta,
+    pub meta: Meta,
     pub instances: Vec<Instance>,
 }

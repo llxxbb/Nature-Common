@@ -5,7 +5,7 @@ use std::ops::Deref;
 
 use crate::{generate_id, NatureError, Result};
 use crate::convertor::DynamicConverter;
-use crate::thing_type::ThingType;
+use crate::meta_type::MetaType;
 
 use super::Meta;
 
@@ -22,7 +22,7 @@ impl Instance {
         Ok(Instance {
             id: 0,
             data: InstanceNoID {
-                thing: Meta::new(key)?,
+                meta: Meta::new(key)?,
                 event_time: 0,
                 execute_time: 0,
                 create_time: 0,
@@ -35,11 +35,11 @@ impl Instance {
         })
     }
 
-    pub fn new_with_type(key: &str, thing_type: ThingType) -> Result<Self> {
+    pub fn new_with_type(key: &str, meta: MetaType) -> Result<Self> {
         Ok(Instance {
             id: 0,
             data: InstanceNoID {
-                thing: Meta::new_with_type(key, thing_type)?,
+                meta: Meta::new_with_type(key, meta)?,
                 event_time: 0,
                 execute_time: 0,
                 create_time: 0,
@@ -52,8 +52,8 @@ impl Instance {
         })
     }
 
-    pub fn change_thing_type(&mut self, thing_type: ThingType) {
-        self.data.thing.set_thing_type(thing_type);
+    pub fn change_meta_type(&mut self, meta_type: MetaType) {
+        self.data.meta.set_meta_type(meta_type);
     }
 
     pub fn fix_id(&mut self) -> Result<&mut Self> {
@@ -65,7 +65,7 @@ impl Instance {
 
     pub fn check_and_fix_id<T, F>(&mut self, checker: F) -> Result<&mut Self>
         where F: Fn(&Meta) -> Result<T> {
-        let _ = self.thing.check(checker)?;
+        let _ = self.meta.check(checker)?;
         self.fix_id()
     }
 
@@ -99,7 +99,7 @@ impl Iterator for Instance {
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct InstanceNoID {
     /// This instance's Type
-    pub thing: Meta,
+    pub meta: Meta,
     /// The time that this instance exists
     pub event_time: i64,
     /// The time which plan to flow for this instance
@@ -126,7 +126,7 @@ pub struct InstanceNoID {
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct FromInstance {
-    pub thing: Meta,
+    pub meta: Meta,
     pub status_version: i32,
 }
 
@@ -159,7 +159,7 @@ mod test {
         // TODO
 //        let mocks = MyMocks::new();
 //        let service = InstanceServiceImpl {
-//            define_cache: mocks.c_thing_define.clone()
+//            define_cache: mocks.c_meta.clone()
 //        };
 //        let mut instance = Instance::new("hello").unwrap();
 //        service.id_generate_if_not_set(&mut instance).unwrap();

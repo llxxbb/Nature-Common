@@ -13,13 +13,13 @@ pub use parallel_batch_instance::*;
 pub use serial_batch_instance::*;
 pub use self::meta::*;
 pub use util::*;
-pub use thing_type::*;
+pub use meta_type::*;
 
 mod convertor;
 mod error;
 mod instance;
 mod meta;
-mod thing_type;
+mod meta_type;
 mod parallel_batch_instance;
 mod serial_batch_instance;
 
