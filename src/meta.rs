@@ -14,15 +14,12 @@ pub struct Meta {
     /// A `Meta` may have a lots of `Instance`s, so it's a **Class** for Instance`.
     /// Because there are huge quantity of `Meta`s , so we need a way to organize `Meta`s.
     /// A way is to set name with hierarchical structures,
-    ///
-    /// The `key` will include `meta_type` prefix.
-    ///
-    /// # Value Example
-    ///
-    /// /B/shop/order
     key: String,
 
     /// key with `MetaType` prefix
+    /// # Value Example
+    ///
+    /// /B/shop/order
     full_key: String,
 
     /// A `Meta` can be changed in future, the `version` will support this without effect the old ones
