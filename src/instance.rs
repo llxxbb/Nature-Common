@@ -9,7 +9,7 @@ use crate::meta_type::MetaType;
 
 use super::Meta;
 
-/// A snapshot for a particular `Thing`
+/// A snapshot for a particular `Meta`
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct Instance {
     /// A unique value used to distinguish other instance
@@ -95,7 +95,7 @@ impl Iterator for Instance {
     }
 }
 
-/// A snapshot for a particular `Thing`
+/// A snapshot for a particular `Meta`
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct InstanceNoID {
     /// This instance's Type
@@ -106,9 +106,9 @@ pub struct InstanceNoID {
     pub execute_time: i64,
     /// When this instance created in db
     pub create_time: i64,
-    /// What contend in this instance for the `Thing`
+    /// What contend in this instance for the `Meta`
     pub content: String,
-    /// Is a json for a `Map[key, value]` which contents other instance for other `Thing`'s.
+    /// Is a json for a `Map[key, value]` which contents other instance for other `Meta`'s.
     /// `Nature` can transform those to `Instance`'s by flowing.
     ///
     /// # Key

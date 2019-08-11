@@ -10,7 +10,7 @@ pub enum NatureError {
     // outer input verify errors
     SerializeError(String),
     VerifyError(String),
-    ThingNotDefined(String),
+    MetaNotDefined(String),
     InstanceStatusVersionConflict,
     UuidParseError,
 

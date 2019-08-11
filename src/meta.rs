@@ -1,14 +1,18 @@
+use super::MetaType;
 use super::NatureError;
 use super::Result;
-use super::MetaType;
+
+/// separator for `Meta`'s key
+static PATH_SEPARATOR: char = '/';
+static META_AND_VERSION_SEPARATOR: &str = ":";
 
 /// Business Metadata
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Ord, PartialOrd)]
 pub struct Meta {
-    /// # Identify a `Thing`.
+    /// # Identify a `Meta`.
     ///
-    /// A `Thing` may have a lots of `Instance`s, so it's a **Class** for Instance`.
-    /// Because there are huge quantity of `Thing`s , so we need a way to organize `Thing`s.
+    /// A `Meta` may have a lots of `Instance`s, so it's a **Class** for Instance`.
+    /// Because there are huge quantity of `Meta`s , so we need a way to organize `Meta`s.
     /// A way is to set name with hierarchical structures,
     ///
     /// The `key` will include `meta_type` prefix.
@@ -18,13 +22,13 @@ pub struct Meta {
     /// /B/shop/order
     key: String,
 
-    /// key with `ThingType` prefix
+    /// key with `MetaType` prefix
     full_key: String,
 
-    /// A `Thing` can be changed in future, the `version` will support this without effect the old ones
+    /// A `Meta` can be changed in future, the `version` will support this without effect the old ones
     pub version: i32,
 
-    /// A `Thing`'s type
+    /// A `Meta`'s type
     meta_type: MetaType,
 }
 
@@ -109,6 +113,18 @@ impl Meta {
         self.full_key = meta_type.get_prefix() + &self.key.clone();
     }
 
+    pub fn get_string(&self) -> String {
+        self.full_key.clone() + META_AND_VERSION_SEPARATOR + &self.version.to_string()
+    }
+
+    pub fn from_string(meta_str : &str) -> Result<Meta>{
+        let x:Vec<&str> = meta_str.split(META_AND_VERSION_SEPARATOR).collect();
+        if x.len() != 2 {
+            return Err(NatureError::VerifyError("error meta string format".to_string()))
+        }
+        Self::from_full_key(x[0], x[1].parse()?)
+    }
+
     pub fn from_full_key(fk: &str, version: i32) -> Result<Meta> {
         let err_msg = "illegal format for `full_key` : ".to_string() + fk.clone();
         if fk == "/N" {
@@ -129,9 +145,6 @@ impl Meta {
         Ok(())
     }
 }
-
-/// separator for `Thing`'s key
-static PATH_SEPARATOR: char = '/';
 
 
 #[cfg(test)]

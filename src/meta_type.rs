@@ -1,7 +1,7 @@
 use crate::error::NatureError;
 use crate::Result;
 
-/// Every `Thing` must have a type
+/// Every `Meta` must have a type
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Ord, PartialOrd)]
 pub enum MetaType {
     Business,
