@@ -9,11 +9,12 @@ extern crate uuid;
 pub use convertor::*;
 pub use error::*;
 pub use instance::*;
+pub use self::meta::*;
+pub use meta_type::*;
 pub use parallel_batch_instance::*;
 pub use serial_batch_instance::*;
-pub use self::meta::*;
+pub use state::*;
 pub use util::*;
-pub use meta_type::*;
 
 mod convertor;
 mod error;
@@ -22,6 +23,7 @@ mod meta;
 mod meta_type;
 mod parallel_batch_instance;
 mod serial_batch_instance;
+mod state;
 
 pub mod util;
 
