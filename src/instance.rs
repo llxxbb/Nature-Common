@@ -63,9 +63,9 @@ impl Instance {
         Ok(self)
     }
 
-    pub fn check_and_fix_id<T, F>(&mut self, checker: F) -> Result<&mut Self>
+    pub fn check_and_fix_id<T, F>(&mut self, meta_getter: F) -> Result<&mut Self>
         where F: Fn(&Meta) -> Result<T> {
-        let _ = self.meta.check(checker)?;
+        let _ = self.meta.get(meta_getter)?;
         self.fix_id()
     }
 

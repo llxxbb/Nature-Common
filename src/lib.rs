@@ -12,7 +12,6 @@ pub use instance::*;
 pub use meta_type::*;
 pub use parallel_batch_instance::*;
 pub use serial_batch_instance::*;
-pub use instance_state::*;
 pub use util::*;
 
 pub use self::meta::*;

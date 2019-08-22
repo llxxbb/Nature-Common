@@ -1,3 +1,5 @@
+use crate::state::States;
+
 use super::MetaType;
 use super::NatureError;
 use super::Result;
@@ -27,6 +29,8 @@ pub struct Meta {
 
     /// A `Meta`'s type
     meta_type: MetaType,
+
+    pub state: Option<States>,
 }
 
 impl Default for Meta {
@@ -36,6 +40,7 @@ impl Default for Meta {
             full_key: MetaType::Business.get_prefix(),
             version: 1,
             meta_type: MetaType::Business,
+            state: None,
         }
     }
 }
@@ -78,7 +83,8 @@ impl Meta {
                     key: key.clone(),
                     full_key: meta_type.get_prefix() + &key,
                     version,
-                    meta_type: meta_type,
+                    meta_type,
+                    state: None,
                 }
             })
         }
@@ -90,7 +96,8 @@ impl Meta {
             key: String::new(),
             full_key: meta_type.get_prefix(),
             version: 1,
-            meta_type: meta_type,
+            meta_type,
+            state: None,
         }
     }
 
@@ -114,10 +121,10 @@ impl Meta {
         self.full_key.clone() + META_AND_VERSION_SEPARATOR + &self.version.to_string()
     }
 
-    pub fn from_string(meta_str : &str) -> Result<Meta>{
-        let x:Vec<&str> = meta_str.split(META_AND_VERSION_SEPARATOR).collect();
+    pub fn from_string(meta_str: &str) -> Result<Meta> {
+        let x: Vec<&str> = meta_str.split(META_AND_VERSION_SEPARATOR).collect();
         if x.len() != 2 {
-            return Err(NatureError::VerifyError("error meta string format".to_string()))
+            return Err(NatureError::VerifyError("error meta string format".to_string()));
         }
         Self::from_full_key(x[0], x[1].parse()?)
     }
@@ -137,8 +144,8 @@ impl Meta {
         Meta::new_with_version_and_type(&fk[3..], version, meta_type)
     }
 
-    pub fn check<T, F>(&self, checker: F) -> Result<()> where F: Fn(&Meta) -> Result<T> {
-        checker(&self)?;
+    pub fn get<T, F>(&self, getter: F) -> Result<()> where F: Fn(&Meta) -> Result<T> {
+        getter(&self)?;
         Ok(())
     }
 }

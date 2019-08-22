@@ -5,19 +5,12 @@ use crate::NatureError;
 
 pub type States = Vec<State>;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Eq, Hash, Clone, Ord, PartialOrd)]
 pub enum State {
     Mutex(Vec<State>),
     Normal(String),
     Parent(String, Vec<State>),
 }
-
-enum StateType {
-    Mutex,
-    Normal,
-    Parent,
-}
-
 
 impl ToString for State {
     fn to_string(&self) -> String {
@@ -43,7 +36,7 @@ impl State {
         rtn
     }
 
-    pub fn string_to_states_v2(states: &str) -> Result<(States, usize), NatureError> {
+    pub fn string_to_states(states: &str) -> Result<(States, usize), NatureError> {
         // check length
         if states.len() < 1 {
             return Err(NatureError::VerifyError("states string should not be empty".to_string()));
@@ -94,7 +87,7 @@ impl State {
                     }
                 }
                 "[" => {    // parent begin
-                    let r = Self::string_to_states_v2(&states[x + 1..])?;
+                    let r = Self::string_to_states(&states[x + 1..])?;
                     x = x + r.1;
                     parent = Some(State::Parent(normal, r.0));
                     normal = String::new();
@@ -193,7 +186,7 @@ mod string_to_states_virtual_end {
     // no normal, parent, not mutex : test under here
     #[test]
     fn for_parent_and_no_mutex() {
-        let rtn = State::string_to_states_v2("p[b]|a").unwrap();
+        let rtn = State::string_to_states("p[b]|a").unwrap();
         assert_eq!(rtn.0.len(), 1);
         assert_eq!(rtn.0[0], State::Mutex(vec![
             State::Parent("p".to_string(), vec![State::Normal("b".to_string())]),
@@ -204,7 +197,7 @@ mod string_to_states_virtual_end {
     // no normal, parent, mutex : test under here
     #[test]
     fn for_parent_and_mutex() {
-        let rtn = State::string_to_states_v2("a|p[b]|a").unwrap();
+        let rtn = State::string_to_states("a|p[b]|a").unwrap();
         assert_eq!(rtn.0.len(), 1);
         assert_eq!(rtn.0[0], State::Mutex(vec![
             State::Normal("a".to_string()),
@@ -222,7 +215,7 @@ mod string_to_states_square_end {
     // normal, no parent, mutex : already test in other place
     #[test]
     fn for_normal_and_mutex() {
-        let rtn = State::string_to_states_v2("p[b|a]").unwrap();
+        let rtn = State::string_to_states("p[b|a]").unwrap();
         assert_eq!(rtn.0.len(), 1);
         assert_eq!(rtn.0[0], State::Parent("p".to_string(), vec![
             State::Mutex(vec![
@@ -237,7 +230,7 @@ mod string_to_states_square_end {
     // no normal, parent, not mutex : test under here
     #[test]
     fn for_parent_and_no_mutex() {
-        let rtn = State::string_to_states_v2("p[p[b]]").unwrap();
+        let rtn = State::string_to_states("p[p[b]]").unwrap();
         assert_eq!(rtn.0.len(), 1);
         assert_eq!(rtn.0[0], State::Parent("p".to_string(), vec![
             State::Parent("p".to_string(), vec![State::Normal("b".to_string())]),
@@ -247,7 +240,7 @@ mod string_to_states_square_end {
     // no normal, parent, mutex : test under here
     #[test]
     fn for_parent_and_mutex() {
-        let rtn = State::string_to_states_v2("p[a|p[b]]").unwrap();
+        let rtn = State::string_to_states("p[a|p[b]]").unwrap();
         assert_eq!(rtn.0.len(), 1);
         assert_eq!(rtn.0[0], State::Parent("p".to_string(), vec![
             State::Mutex(vec![
@@ -270,7 +263,7 @@ mod string_to_states_comma_end {
     // no normal, parent, mutex : test under here
     #[test]
     fn for_parent_and_mutex() {
-        let rtn = State::string_to_states_v2("a|p[b],a").unwrap();
+        let rtn = State::string_to_states("a|p[b],a").unwrap();
         assert_eq!(rtn.0.len(), 2);
         assert_eq!(rtn.0[0], State::Mutex(vec![
             State::Normal("a".to_string()),
@@ -286,7 +279,7 @@ mod string_to_states_for_mixed {
 
     #[test]
     fn normal_parent() {
-        let rtn = State::string_to_states_v2("a,p[c]").unwrap();
+        let rtn = State::string_to_states("a,p[c]").unwrap();
         assert_eq!(rtn.0.len(), 2);
         assert_eq!(rtn.0[0], State::Normal("a".to_string()));
         assert_eq!(rtn.0[1], State::Parent("p".to_string(), vec![State::Normal("c".to_string())]));
@@ -294,7 +287,7 @@ mod string_to_states_for_mixed {
 
     #[test]
     fn normal_mutex() {
-        let rtn = State::string_to_states_v2("a,c|d").unwrap();
+        let rtn = State::string_to_states("a,c|d").unwrap();
         assert_eq!(rtn.0.len(), 2);
         assert_eq!(rtn.0[0], State::Normal("a".to_string()));
         assert_eq!(rtn.0[1], State::Mutex(vec![
@@ -305,7 +298,7 @@ mod string_to_states_for_mixed {
 
     #[test]
     fn parent_mutex() {
-        let rtn = State::string_to_states_v2("p[a],c|d").unwrap();
+        let rtn = State::string_to_states("p[a],c|d").unwrap();
         assert_eq!(rtn.0.len(), 2);
         assert_eq!(rtn.0[0], State::Parent("p".to_string(), vec![State::Normal("a".to_string())]));
         assert_eq!(rtn.0[1], State::Mutex(vec![
@@ -317,7 +310,7 @@ mod string_to_states_for_mixed {
 
     #[test]
     fn complex() {
-        let rtn = State::string_to_states_v2("a,p[a],m|n,p[m|m,p[a,b]|p[c,c]]").unwrap();
+        let rtn = State::string_to_states("a,p[a],m|n,p[m|m,p[a,b]|p[c,c]]").unwrap();
         assert_eq!(rtn.0.len(), 4);
         assert_eq!(rtn.0[0], State::Normal("a".to_string()));
         assert_eq!(rtn.0[1], State::Parent("p".to_string(), vec![State::Normal("a".to_string())]));
@@ -350,14 +343,14 @@ mod string_to_states_for_mutex {
 
     #[test]
     fn single() {
-        let rtn = State::string_to_states_v2("a|b").unwrap();
+        let rtn = State::string_to_states("a|b").unwrap();
         assert_eq!(rtn.0.len(), 1);
         assert_eq!(rtn.0[0], State::Mutex(vec![
             State::Normal("a".to_string()),
             State::Normal("b".to_string()),
         ]));
 
-        let rtn = State::string_to_states_v2("a|b|c").unwrap();
+        let rtn = State::string_to_states("a|b|c").unwrap();
         assert_eq!(rtn.0.len(), 1);
         assert_eq!(rtn.0[0], State::Mutex(vec![
             State::Normal("a".to_string()),
@@ -368,7 +361,7 @@ mod string_to_states_for_mutex {
 
     #[test]
     fn multi() {
-        let rtn = State::string_to_states_v2("a|b,c|d").unwrap();
+        let rtn = State::string_to_states("a|b,c|d").unwrap();
         assert_eq!(rtn.0.len(), 2);
         assert_eq!(rtn.0[0], State::Mutex(vec![
             State::Normal("a".to_string()),
@@ -387,14 +380,14 @@ mod string_to_states_for_parent {
 
     #[test]
     fn one_child() {
-        let rtn = State::string_to_states_v2("p[a]").unwrap();
+        let rtn = State::string_to_states("p[a]").unwrap();
         assert_eq!(rtn.0.len(), 1);
         assert_eq!(rtn.0[0], State::Parent("p".to_string(), vec![State::Normal("a".to_string())]));
     }
 
     #[test]
     fn three_children() {
-        let rtn = State::string_to_states_v2("p[a,b,c]").unwrap();
+        let rtn = State::string_to_states("p[a,b,c]").unwrap();
         assert_eq!(rtn.0.len(), 1);
         assert_eq!(rtn.0[0], State::Parent("p".to_string(), vec![
             State::Normal("a".to_string()),
@@ -404,7 +397,7 @@ mod string_to_states_for_parent {
 
     #[test]
     fn three_parent() {
-        let rtn = State::string_to_states_v2("p1[a],p2[b],p3[c]").unwrap();
+        let rtn = State::string_to_states("p1[a],p2[b],p3[c]").unwrap();
         assert_eq!(rtn.0.len(), 3);
         assert_eq!(rtn.0[0], State::Parent("p1".to_string(), vec![State::Normal("a".to_string())]));
         assert_eq!(rtn.0[1], State::Parent("p2".to_string(), vec![State::Normal("b".to_string())]));
@@ -413,11 +406,11 @@ mod string_to_states_for_parent {
 
     #[test]
     fn comma_end() {
-        let rtn = State::string_to_states_v2("p[a,").unwrap();
+        let rtn = State::string_to_states("p[a,").unwrap();
         assert_eq!(rtn.0.len(), 1);
         assert_eq!(rtn.0[0], State::Parent("p".to_string(), vec![State::Normal("a".to_string())]));
 
-        let rtn = State::string_to_states_v2("p[a,b],").unwrap();
+        let rtn = State::string_to_states("p[a,b],").unwrap();
         assert_eq!(rtn.0.len(), 1);
         assert_eq!(rtn.0[0], State::Parent("p".to_string(), vec![
             State::Normal("a".to_string()),
@@ -426,11 +419,11 @@ mod string_to_states_for_parent {
 
     #[test]
     fn right_square_missed() {
-        let rtn = State::string_to_states_v2("p[a").unwrap();
+        let rtn = State::string_to_states("p[a").unwrap();
         assert_eq!(rtn.0.len(), 1);
         assert_eq!(rtn.0[0], State::Parent("p".to_string(), vec![State::Normal("a".to_string())]));
 
-        let rtn = State::string_to_states_v2("p[a,b").unwrap();
+        let rtn = State::string_to_states("p[a,b").unwrap();
         assert_eq!(rtn.0.len(), 1);
         assert_eq!(rtn.0[0], State::Parent("p".to_string(), vec![
             State::Normal("a".to_string()),
@@ -444,14 +437,14 @@ mod string_to_states_for_normal {
 
     #[test]
     fn only_one() {
-        let rtn = State::string_to_states_v2("test").unwrap();
+        let rtn = State::string_to_states("test").unwrap();
         assert_eq!(rtn.0.len(), 1);
         assert_eq!(rtn.0[0], State::Normal("test".to_string()));
     }
 
     #[test]
     fn three() {
-        let rtn = State::string_to_states_v2("a,b,c").unwrap();
+        let rtn = State::string_to_states("a,b,c").unwrap();
         assert_eq!(rtn.0.len(), 3);
         assert_eq!(rtn.0[0], State::Normal("a".to_string()));
         assert_eq!(rtn.0[1], State::Normal("b".to_string()));
@@ -460,7 +453,7 @@ mod string_to_states_for_normal {
 
     #[test]
     fn comma_end() {
-        let rtn = State::string_to_states_v2("a,b,").unwrap();
+        let rtn = State::string_to_states("a,b,").unwrap();
         assert_eq!(rtn.0.len(), 2);
         assert_eq!(rtn.0[0], State::Normal("a".to_string()));
         assert_eq!(rtn.0[1], State::Normal("b".to_string()));
