@@ -4,7 +4,7 @@ use std::iter::Iterator;
 use std::ops::Deref;
 
 use crate::{generate_id, NatureError, Result};
-use crate::convertor::DynamicConverter;
+use crate::converter::DynamicConverter;
 use crate::meta_type::MetaType;
 
 use super::Meta;

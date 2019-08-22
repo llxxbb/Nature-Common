@@ -6,7 +6,7 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate uuid;
 
-pub use convertor::*;
+pub use converter::*;
 pub use error::*;
 pub use instance::*;
 pub use meta_type::*;
@@ -17,15 +17,14 @@ pub use util::*;
 
 pub use self::meta::*;
 
-mod convertor;
+mod converter;
 mod error;
 mod instance;
 mod meta;
 mod meta_type;
 mod parallel_batch_instance;
 mod serial_batch_instance;
-mod instance_state;
 mod util;
-mod meta_state;
+mod state;
 
 pub type Result<T> = std::result::Result<T, NatureError>;
