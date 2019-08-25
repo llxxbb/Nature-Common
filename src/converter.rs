@@ -36,6 +36,8 @@ pub struct DynamicConverter {
     pub to: Option<String>,
     /// REST api for convert to `to`
     pub fun: Executor,
+    /// use upstream's id as downstream's id.
+    pub use_upstream_id: bool,
 }
 
 
