@@ -8,13 +8,15 @@ extern crate uuid;
 
 pub use converter::*;
 pub use error::*;
+pub use fetch_condition::*;
 pub use instance::*;
-pub use self::meta::*;
 pub use meta_type::*;
 pub use parallel_batch_instance::*;
 pub use serial_batch_instance::*;
 pub use state::*;
 pub use util::*;
+
+pub use self::meta::*;
 
 mod converter;
 mod error;
@@ -25,5 +27,6 @@ mod parallel_batch_instance;
 mod serial_batch_instance;
 mod util;
 mod state;
+mod fetch_condition;
 
 pub type Result<T> = std::result::Result<T, NatureError>;
