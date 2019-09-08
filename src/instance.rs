@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::iter::Iterator;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 use crate::{generate_id, NatureError, Result};
 use crate::converter::DynamicConverter;
@@ -85,6 +85,12 @@ impl Deref for Instance {
 
     fn deref(&self) -> &<Self as Deref>::Target {
         &self.data
+    }
+}
+
+impl DerefMut for Instance {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.data
     }
 }
 

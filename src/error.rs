@@ -1,4 +1,5 @@
 use std;
+use std::error::Error;
 use std::fmt;
 use std::fmt::Formatter;
 
@@ -32,6 +33,9 @@ pub enum NatureError {
     Break,
 
 }
+
+impl Error for NatureError {}
+
 
 impl From<serde_json::error::Error> for NatureError {
     fn from(e: serde_json::error::Error) -> Self {
