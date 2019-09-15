@@ -15,6 +15,7 @@ pub use parallel_batch_instance::*;
 pub use serial_batch_instance::*;
 pub use state::*;
 pub use util::*;
+pub use query::*;
 
 pub use self::meta::*;
 
@@ -28,5 +29,6 @@ mod serial_batch_instance;
 mod util;
 mod state;
 mod fetch_condition;
+mod query;
 
 pub type Result<T> = std::result::Result<T, NatureError>;

@@ -29,7 +29,7 @@ impl Instance {
                 content: "".to_string(),
                 context: HashMap::new(),
                 states: HashSet::new(),
-                status_version: 0,
+                state_version: 0,
                 from: None,
             },
         })
@@ -46,7 +46,7 @@ impl Instance {
                 content: "".to_string(),
                 context: HashMap::new(),
                 states: HashSet::new(),
-                status_version: 0,
+                state_version: 0,
                 from: None,
             },
         })
@@ -116,7 +116,7 @@ pub struct InstanceNoID {
     /// json data for a `Instance`.
     pub context: HashMap<String, String>,
     pub states: HashSet<String>,
-    pub status_version: i32,
+    pub state_version: i32,
     pub from: Option<FromInstance>,
 }
 
