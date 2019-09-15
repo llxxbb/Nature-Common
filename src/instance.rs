@@ -68,16 +68,6 @@ impl Instance {
         let _ = self.meta.get(meta_getter)?;
         self.fix_id()
     }
-
-    pub fn save<F>(&self, dao: F) -> Result<usize>
-        where F: Fn(&Instance) -> Result<usize>
-    {
-        match dao(self) {
-            Ok(num) => Ok(num),
-            Err(NatureError::DaoDuplicated(_)) => Ok(0),
-            Err(e) => Err(e)
-        }
-    }
 }
 
 impl Deref for Instance {

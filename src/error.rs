@@ -1,7 +1,7 @@
 use std;
 use std::error::Error;
 use std::fmt;
-use std::fmt::Formatter;
+use std::fmt::{Display, Formatter};
 
 use actix::prelude::SendError;
 use uuid;
@@ -36,6 +36,12 @@ pub enum NatureError {
 
 impl Error for NatureError {}
 
+impl Display for NatureError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 
 impl From<serde_json::error::Error> for NatureError {
     fn from(e: serde_json::error::Error) -> Self {
@@ -61,8 +67,3 @@ impl<T> From<SendError<T>> for NatureError {
     }
 }
 
-impl fmt::Display for NatureError {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        write!(f, "{}", self)
-    }
-}
