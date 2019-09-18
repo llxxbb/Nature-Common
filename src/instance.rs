@@ -150,17 +150,14 @@ impl SelfRouteInstance {
 
 #[cfg(test)]
 mod test {
+    use crate::Instance;
+
     #[test]
-    fn id_generate() {
-        // TODO
-//        let mocks = MyMocks::new();
-//        let service = InstanceServiceImpl {
-//            define_cache: mocks.c_meta.clone()
-//        };
-//        let mut instance = Instance::new("hello").unwrap();
-//        service.id_generate_if_not_set(&mut instance).unwrap();
-//        println!("{:?}", instance.id);
-//        assert_eq!(instance.id, 336556392135652841283170827290494770821);
+    fn instance_automatic_generate_id() {
+        let mut instance = Instance::new("hello").unwrap();
+        assert_eq!(instance.id, 0);
+        let _ = instance.fix_id();
+        assert_eq!(instance.id, 17399718179305179577446015748023824286);
     }
 }
 

@@ -1,5 +1,4 @@
 use std::fmt::Write;
-use std::str::FromStr;
 
 use crate::NatureError;
 
@@ -137,41 +136,6 @@ impl State {
             }
         }
         Ok((rtn, states.len()))
-    }
-
-    pub fn string_to_states_v1(_states: &str, mut _rtn: Vec<State>) -> Result<States, NatureError> {
-        unimplemented!()
-    }
-}
-
-impl FromStr for State {
-    type Err = NatureError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s.len() < 1 {
-            return Err(NatureError::VerifyError("state string can't be empty".to_string()));
-        }
-        let rtn = match s.find("[") {
-            Some(index) => {
-                let subs = &s[index + 1..s.len() - 1];
-                State::Parent(s[..index].to_string(), Self::string_to_states_v1(subs, vec![])?)
-            }
-            None => match s.find("|") {
-                None => State::Normal(s.to_owned()),
-                Some(_) => {
-                    let x: Vec<&str> = s.split("|").collect();
-                    let mut r_v: Vec<State> = vec![];
-                    let vec_result: Result<(), NatureError> = x.iter().try_for_each(|one| {
-                        let result = one.parse::<State>()?;
-                        r_v.push(result);
-                        Ok(())
-                    });
-                    let _ = vec_result?;
-                    State::Mutex(r_v)
-                }
-            }
-        };
-        Ok(rtn)
     }
 }
 
