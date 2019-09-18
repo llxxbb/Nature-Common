@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use std::iter::Iterator;
 use std::ops::{Deref, DerefMut};
 
-use crate::{generate_id, NatureError, Result};
+use crate::{generate_id, NatureError, Result, TargetState};
 use crate::converter::DynamicConverter;
 use crate::meta_type::MetaType;
 
@@ -120,6 +120,19 @@ pub struct InstanceNoID {
     pub from: Option<FromInstance>,
 }
 
+impl InstanceNoID {
+    pub fn modify_state(&mut self, add_and_delete: TargetState) {
+        // delete first
+        if let Some(x) = add_and_delete.remove {
+            x.iter().for_each(|one| { self.states.remove(one); });
+        }
+        // add then
+        if let Some(x) = add_and_delete.add {
+            x.iter().for_each(|one| { self.states.insert(one.clone()); });
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct FromInstance {
     pub meta: Meta,
@@ -150,14 +163,59 @@ impl SelfRouteInstance {
 
 #[cfg(test)]
 mod test {
-    use crate::Instance;
+    use crate::{Instance, TargetState};
 
     #[test]
-    fn instance_automatic_generate_id() {
+    fn automatic_generate_id() {
         let mut instance = Instance::new("hello").unwrap();
         assert_eq!(instance.id, 0);
         let _ = instance.fix_id();
         assert_eq!(instance.id, 17399718179305179577446015748023824286);
     }
-}
 
+    #[test]
+    fn modify_state() {
+        let mut ins = Instance::new("hello").unwrap();
+        assert_eq!(ins.states.len(), 0);
+        ins.modify_state(TargetState {
+            add: None,
+            remove: None
+        });
+        assert_eq!(ins.states.len(), 0);
+        ins.modify_state(TargetState {
+            add: Some(vec!["a".to_string(),"b".to_string()]),
+            remove: None
+        });
+        assert_eq!(ins.states.len(), 2);
+        assert_eq!(ins.states.contains("a"), true);
+        assert_eq!(ins.states.contains("b"), true);
+        ins.modify_state(TargetState {
+            add: Some(vec!["c".to_string(),"d".to_string()]),
+            remove: Some(vec!["a".to_string()])
+        });
+        assert_eq!(ins.states.len(), 3);
+        assert_eq!(ins.states.contains("b"), true);
+        assert_eq!(ins.states.contains("c"), true);
+        assert_eq!(ins.states.contains("d"), true);
+        ins.modify_state(TargetState {
+            add: None,
+            remove: Some(vec!["b".to_string(),"c".to_string()])
+        });
+        assert_eq!(ins.states.len(), 1);
+        assert_eq!(ins.states.contains("d"), true);
+        // add same
+        ins.modify_state(TargetState {
+            add: Some(vec!["d".to_string()]),
+            remove: None
+        });
+        assert_eq!(ins.states.len(), 1);
+        assert_eq!(ins.states.contains("d"), true);
+        // remove not exists
+        ins.modify_state(TargetState {
+            add: None,
+            remove: Some(vec!["b".to_string(),"c".to_string()])
+        });
+        assert_eq!(ins.states.len(), 1);
+        assert_eq!(ins.states.contains("d"), true);
+    }
+}

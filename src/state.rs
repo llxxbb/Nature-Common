@@ -4,6 +4,7 @@ use crate::NatureError;
 
 pub type States = Vec<State>;
 
+/// The structure for defined state in meta
 #[derive(Debug, PartialEq, Serialize, Deserialize, Eq, Hash, Clone, Ord, PartialOrd)]
 pub enum State {
     Mutex(Vec<State>),

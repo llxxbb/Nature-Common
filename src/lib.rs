@@ -12,10 +12,11 @@ pub use fetch_condition::*;
 pub use instance::*;
 pub use meta_type::*;
 pub use parallel_batch_instance::*;
+pub use query::*;
 pub use serial_batch_instance::*;
 pub use state::*;
+pub use target_state::*;
 pub use util::*;
-pub use query::*;
 
 pub use self::meta::*;
 
@@ -30,5 +31,6 @@ mod util;
 mod state;
 mod fetch_condition;
 mod query;
+mod target_state;
 
 pub type Result<T> = std::result::Result<T, NatureError>;
