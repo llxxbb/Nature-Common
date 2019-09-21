@@ -144,8 +144,8 @@ impl Meta {
         Meta::new_with_version_and_type(&fk[3..], version, meta_type)
     }
 
-    pub fn get<T, F>(&self, getter: F) -> Result<()> where F: Fn(&Meta) -> Result<T> {
-        getter(&self)?;
+    pub fn get<T, W>(&self, meta_cache_getter: fn(&Meta, fn(&Meta) -> Result<T>) -> Result<W>, meta_getter: fn(&Meta) -> Result<T>) -> Result<()> {
+        meta_cache_getter(self, meta_getter)?;
         Ok(())
     }
 }

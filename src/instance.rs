@@ -63,12 +63,12 @@ impl Instance {
         Ok(self)
     }
 
-    pub fn check_and_fix_id<T, F>(&mut self, meta_getter: F) -> Result<&mut Self>
-        where F: Fn(&Meta) -> Result<T> {
-        let _ = self.meta.get(meta_getter)?;
+    pub fn check_and_fix_id<T, W>(&mut self, meta_cache_getter: fn(&Meta, fn(&Meta) -> Result<T>) -> Result<W>, meta_getter: fn(&Meta) -> Result<T>) -> Result<&mut Self> {
+        let _ = self.meta.get(meta_cache_getter, meta_getter)?;
         self.fix_id()
     }
 }
+
 
 impl Deref for Instance {
     type Target = InstanceNoID;
@@ -179,19 +179,19 @@ mod test {
         assert_eq!(ins.states.len(), 0);
         ins.modify_state(TargetState {
             add: None,
-            remove: None
+            remove: None,
         });
         assert_eq!(ins.states.len(), 0);
         ins.modify_state(TargetState {
-            add: Some(vec!["a".to_string(),"b".to_string()]),
-            remove: None
+            add: Some(vec!["a".to_string(), "b".to_string()]),
+            remove: None,
         });
         assert_eq!(ins.states.len(), 2);
         assert_eq!(ins.states.contains("a"), true);
         assert_eq!(ins.states.contains("b"), true);
         ins.modify_state(TargetState {
-            add: Some(vec!["c".to_string(),"d".to_string()]),
-            remove: Some(vec!["a".to_string()])
+            add: Some(vec!["c".to_string(), "d".to_string()]),
+            remove: Some(vec!["a".to_string()]),
         });
         assert_eq!(ins.states.len(), 3);
         assert_eq!(ins.states.contains("b"), true);
@@ -199,21 +199,21 @@ mod test {
         assert_eq!(ins.states.contains("d"), true);
         ins.modify_state(TargetState {
             add: None,
-            remove: Some(vec!["b".to_string(),"c".to_string()])
+            remove: Some(vec!["b".to_string(), "c".to_string()]),
         });
         assert_eq!(ins.states.len(), 1);
         assert_eq!(ins.states.contains("d"), true);
         // add same
         ins.modify_state(TargetState {
             add: Some(vec!["d".to_string()]),
-            remove: None
+            remove: None,
         });
         assert_eq!(ins.states.len(), 1);
         assert_eq!(ins.states.contains("d"), true);
         // remove not exists
         ins.modify_state(TargetState {
             add: None,
-            remove: Some(vec!["b".to_string(),"c".to_string()])
+            remove: Some(vec!["b".to_string(), "c".to_string()]),
         });
         assert_eq!(ins.states.len(), 1);
         assert_eq!(ins.states.contains("d"), true);
