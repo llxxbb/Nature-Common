@@ -163,7 +163,7 @@ impl SelfRouteInstance {
 
 #[cfg(test)]
 mod test {
-    use crate::{Instance, TargetState};
+    use super::*;
 
     #[test]
     fn automatic_generate_id() {
@@ -218,4 +218,34 @@ mod test {
         assert_eq!(ins.states.len(), 1);
         assert_eq!(ins.states.contains("d"), true);
     }
+
+
+    #[test]
+    fn can_not_get_from_cache() {
+        let mut instance = Instance::new("/err").unwrap();
+        fn cache<T, W>(_: &Meta, _: fn(&Meta) -> Result<T>) -> Result<W> {
+            Err(NatureError::VerifyError("cache error".to_string()))
+        }
+        fn getter<T>(_: &Meta) -> Result<T> {
+            Err(NatureError::VerifyError("getter error".to_string()))
+        }
+        let result = instance.check_and_fix_id::<String, String>(cache, getter);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn can_get_from_cache() {
+        let mut instance = Instance::new("/ok").unwrap();
+        fn cache<T>(_: &Meta, _: fn(&Meta) -> Result<T>) -> Result<String> {
+            Ok("hello".to_string())
+        }
+        fn getter<T>(_: &Meta) -> Result<T> {
+            Err(NatureError::VerifyError("getter error".to_string()))
+        }
+        let result = instance.check_and_fix_id::<String, String>(cache, getter);
+        assert!(result.is_ok());
+    }
 }
+
+
+
