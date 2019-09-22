@@ -1,3 +1,4 @@
+use crate::State;
 use crate::state::States;
 
 use super::MetaType;
@@ -148,6 +149,20 @@ impl Meta {
         meta_cache_getter(self, meta_getter)?;
         Ok(())
     }
+
+    pub fn has_state(&self, state: &State) -> bool {
+        match &self.state {
+            None => false,
+            Some(x) => x.iter().find(|one| { one.include(state) }).is_some()
+        }
+    }
+
+    pub fn has_state_name(&self, name: &str) -> bool {
+        match &self.state {
+            None => false,
+            Some(x) => x.iter().find(|one| { one.has_name(name) }).is_some()
+        }
+    }
 }
 
 
@@ -230,5 +245,23 @@ mod test {
         assert_eq!(Meta::new_with_type("/hello", MetaType::Dynamic), Meta::from_full_key("/D/hello", 1));
         assert_eq!(Meta::new_with_type("/world", MetaType::System), Meta::from_full_key("/S/world", 1));
         assert_eq!(Meta::new_with_type("/my", MetaType::Business), Meta::from_full_key("/B/my", 1));
+    }
+
+    #[test]
+    fn has_state_test() {
+        let mut m = Meta::new("hello").unwrap();
+        assert_eq!(m.has_state(&State::Normal("a".to_string())), false);
+        m.state = Some(vec![State::Normal("a".to_string())]);
+        assert_eq!(m.has_state(&State::Normal("a".to_string())), true);
+        assert_eq!(m.has_state(&State::Normal("b".to_string())), false);
+    }
+
+    #[test]
+    fn has_state_name_test() {
+        let mut m = Meta::new("hello").unwrap();
+        assert_eq!(m.has_state_name("a"), false);
+        m.state = Some(vec![State::Normal("a".to_string())]);
+        assert_eq!(m.has_state_name("a"), true);
+        assert_eq!(m.has_state_name("b"), false);
     }
 }

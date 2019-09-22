@@ -71,7 +71,6 @@ impl Default for Protocol {
     }
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq, Hash)]
 pub struct Executor {
     pub protocol: Protocol,

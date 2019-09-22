@@ -138,6 +138,29 @@ impl State {
         }
         Ok((rtn, states.len()))
     }
+
+    pub fn include(&self, another: &State) -> bool {
+        if self.eq(another) {
+            return true;
+        }
+        match self {
+            State::Mutex(x) => x.iter().find(|a| { a.include(another) }).is_some(),
+            State::Parent(_, x) => x.iter().find(|a| { a.include(another) }).is_some(),
+            State::Normal(_) => false
+        }
+    }
+
+    pub fn has_name(&self, name: &str) -> bool {
+        match self {
+            State::Mutex(x) => x.iter().find(|a| { a.has_name(name) }).is_some(),
+            State::Parent(n, x) => {
+                if n == name { true } else {
+                    x.iter().find(|a| { a.has_name(name) }).is_some()
+                }
+            }
+            State::Normal(x) => x == name
+        }
+    }
 }
 
 #[cfg(test)]
@@ -444,5 +467,96 @@ mod states_to_string {
             State::Normal("d".to_string()),
         ]).to_string();
         assert_eq!(string, "a[b[e,f|g,i],c,d]");
+    }
+}
+
+#[cfg(test)]
+mod find_and_hase_name {
+    use super::*;
+
+    #[test]
+    fn normal() {
+        let s = State::Normal("a".to_string());
+        assert_eq!(s.include(&State::Normal("b".to_string())), false);
+        assert_eq!(s.include(&State::Normal("a".to_string())), true);
+        assert_eq!(s.has_name("a"), true);
+        assert_eq!(s.has_name("b"), false);
+    }
+
+    #[test]
+    fn in_mutex() {
+        let s = State::Mutex(vec![
+            State::Normal("a".to_string()),
+            State::Normal("b".to_string())
+        ]);
+        assert_eq!(s.include(&State::Normal("b".to_string())), true);
+        assert_eq!(s.include(&State::Normal("a".to_string())), true);
+        assert_eq!(s.include(&State::Normal("c".to_string())), false);
+        assert_eq!(s.has_name("a"), true);
+        assert_eq!(s.has_name("b"), true);
+        assert_eq!(s.has_name("c"), false);
+
+        let sa = State::Mutex(vec![
+            State::Normal("a".to_string()),
+            State::Normal("b".to_string())
+        ]);
+        assert_eq!(s.include(&sa), true);
+        let sb = State::Mutex(vec![
+            State::Normal("a".to_string()),
+            State::Normal("c".to_string())
+        ]);
+        assert_eq!(s.include(&sb), false);
+    }
+
+    #[test]
+    fn in_parent() {
+        let s = State::Parent("p".to_string(), vec![
+            State::Normal("a".to_string()),
+            State::Normal("b".to_string())
+        ]);
+        assert_eq!(s.include(&State::Normal("b".to_string())), true);
+        assert_eq!(s.include(&State::Normal("a".to_string())), true);
+        assert_eq!(s.include(&State::Normal("c".to_string())), false);
+        assert_eq!(s.has_name("p"), true);
+        assert_eq!(s.has_name("a"), true);
+        assert_eq!(s.has_name("b"), true);
+        assert_eq!(s.has_name("c"), false);
+
+        let sa = State::Parent("p".to_string(), vec![
+            State::Normal("a".to_string()),
+            State::Normal("b".to_string())
+        ]);
+        assert_eq!(s.include(&sa), true);
+        let sa = State::Parent("pp".to_string(), vec![
+            State::Normal("a".to_string()),
+            State::Normal("b".to_string())
+        ]);
+        assert_eq!(s.include(&sa), false);
+        let sb = State::Parent("p".to_string(), vec![
+            State::Normal("a".to_string()),
+            State::Normal("c".to_string())
+        ]);
+        assert_eq!(s.include(&sb), false);
+    }
+
+    #[test]
+    fn in_complex_parent() {
+        let (s, _) = State::string_to_states("a,k[b],c|d,l[e|f,m[g,h]|n[i,j]]").unwrap();
+        let s = State::Parent("pa".to_string(), s);
+        assert_eq!(s.has_name("a"), true);
+        assert_eq!(s.has_name("b"), true);
+        assert_eq!(s.has_name("c"), true);
+        assert_eq!(s.has_name("d"), true);
+        assert_eq!(s.has_name("e"), true);
+        assert_eq!(s.has_name("f"), true);
+        assert_eq!(s.has_name("g"), true);
+        assert_eq!(s.has_name("h"), true);
+        assert_eq!(s.has_name("i"), true);
+        assert_eq!(s.has_name("j"), true);
+        assert_eq!(s.has_name("k"), true);
+        assert_eq!(s.has_name("l"), true);
+        assert_eq!(s.has_name("m"), true);
+        assert_eq!(s.has_name("n"), true);
+        assert_eq!(s.has_name("o"), false);
     }
 }
