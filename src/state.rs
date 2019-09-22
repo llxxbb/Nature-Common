@@ -161,6 +161,14 @@ impl State {
             State::Normal(x) => x == name
         }
     }
+
+    pub fn get_name(&self) -> String {
+        match self {
+            State::Normal(s) => s.clone(),
+            State::Mutex(_) => "".to_string(),
+            State::Parent(s, _) => s.clone()
+        }
+    }
 }
 
 #[cfg(test)]
@@ -471,7 +479,7 @@ mod states_to_string {
 }
 
 #[cfg(test)]
-mod find_and_hase_name {
+mod find_and_has_name {
     use super::*;
 
     #[test]
@@ -558,5 +566,23 @@ mod find_and_hase_name {
         assert_eq!(s.has_name("m"), true);
         assert_eq!(s.has_name("n"), true);
         assert_eq!(s.has_name("o"), false);
+    }
+}
+
+#[cfg(test)]
+mod normal_test {
+    use super::*;
+
+    #[test]
+    fn name_test() {
+        assert_eq!(State::Normal("b".to_string()).get_name(), "b".to_string());
+        assert_eq!(State::Mutex(vec![
+            State::Normal("a".to_string()),
+            State::Normal("b".to_string())
+        ]).get_name(), "".to_string());
+        assert_eq!(State::Parent("p".to_string(), vec![
+            State::Normal("a".to_string()),
+            State::Normal("b".to_string())
+        ]).get_name(), "p".to_string());
     }
 }

@@ -122,6 +122,7 @@ impl Meta {
         self.full_key.clone() + META_AND_VERSION_SEPARATOR + &self.version.to_string()
     }
 
+    /// `meta_str`'s format : [full_key]:[version]
     pub fn from_string(meta_str: &str) -> Result<Meta> {
         let x: Vec<&str> = meta_str.split(META_AND_VERSION_SEPARATOR).collect();
         if x.len() != 2 {
@@ -130,19 +131,20 @@ impl Meta {
         Self::from_full_key(x[0], x[1].parse()?)
     }
 
-    pub fn from_full_key(fk: &str, version: i32) -> Result<Meta> {
-        let err_msg = "illegal format for `full_key` : ".to_string() + fk.clone();
-        if fk == "/N" {
-            return Meta::new_with_type(fk, MetaType::Null);
+    /// `full_key`'s format : /[biz type]/[biz key]
+    pub fn from_full_key(full_key: &str, version: i32) -> Result<Meta> {
+        let err_msg = "illegal format for `full_key` : ".to_string() + full_key.clone();
+        if full_key == "/N" {
+            return Meta::new_with_type(full_key, MetaType::Null);
         }
-        if fk.len() < 3 {
+        if full_key.len() < 3 {
             return Err(NatureError::VerifyError(err_msg));
         }
-        if &fk[2..3] != "/" {
+        if &full_key[2..3] != "/" {
             return Err(NatureError::VerifyError(err_msg));
         }
-        let meta_type = MetaType::from_prefix(&fk[0..2])?;
-        Meta::new_with_version_and_type(&fk[3..], version, meta_type)
+        let meta_type = MetaType::from_prefix(&full_key[0..2])?;
+        Meta::new_with_version_and_type(&full_key[3..], version, meta_type)
     }
 
     pub fn get<T, W>(&self, meta_cache_getter: fn(&Meta, fn(&Meta) -> Result<T>) -> Result<W>, meta_getter: fn(&Meta) -> Result<T>) -> Result<()> {
