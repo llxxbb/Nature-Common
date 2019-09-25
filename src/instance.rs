@@ -63,7 +63,7 @@ impl Instance {
         Ok(self)
     }
 
-    pub fn check_and_fix_id<T, W>(&mut self, meta_cache_getter: fn(&Meta, fn(&Meta) -> Result<T>) -> Result<W>, meta_getter: fn(&Meta) -> Result<T>) -> Result<&mut Self> {
+    pub fn check_and_fix_id<T, W>(&mut self, meta_cache_getter: fn(&mut Meta, fn(&Meta) -> Result<T>) -> Result<W>, meta_getter: fn(&Meta) -> Result<T>) -> Result<&mut Self> {
         let _ = self.meta.get(meta_cache_getter, meta_getter)?;
         self.fix_id()
     }
@@ -223,7 +223,7 @@ mod test {
     #[test]
     fn can_not_get_from_cache() {
         let mut instance = Instance::new("/err").unwrap();
-        fn cache<T, W>(_: &Meta, _: fn(&Meta) -> Result<T>) -> Result<W> {
+        fn cache<T, W>(_: &mut Meta, _: fn(&Meta) -> Result<T>) -> Result<W> {
             Err(NatureError::VerifyError("cache error".to_string()))
         }
         fn getter<T>(_: &Meta) -> Result<T> {
@@ -236,7 +236,7 @@ mod test {
     #[test]
     fn can_get_from_cache() {
         let mut instance = Instance::new("/ok").unwrap();
-        fn cache<T>(_: &Meta, _: fn(&Meta) -> Result<T>) -> Result<String> {
+        fn cache<T>(_: &mut Meta, _: fn(&Meta) -> Result<T>) -> Result<String> {
             Ok("hello".to_string())
         }
         fn getter<T>(_: &Meta) -> Result<T> {

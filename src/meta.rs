@@ -157,7 +157,7 @@ impl Meta {
         Meta::new_with_version_and_type(&full_key[3..], version, meta_type)
     }
 
-    pub fn get<T, W>(&self, meta_cache_getter: fn(&Meta, fn(&Meta) -> Result<T>) -> Result<W>, meta_getter: fn(&Meta) -> Result<T>) -> Result<()> {
+    pub fn get<T, W>(&mut self, meta_cache_getter: fn(&mut Meta, fn(&Meta) -> Result<T>) -> Result<W>, meta_getter: fn(&Meta) -> Result<T>) -> Result<()> {
         meta_cache_getter(self, meta_getter)?;
         Ok(())
     }
@@ -174,6 +174,10 @@ impl Meta {
             None => false,
             Some(x) => x.iter().find(|one| { one.has_name(name) }).is_some()
         }
+    }
+
+    pub fn meta_string(&self) -> String {
+        format!("{:?}:{}", self.full_key, self.version)
     }
 }
 
