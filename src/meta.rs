@@ -177,7 +177,7 @@ impl Meta {
     }
 
     pub fn meta_string(&self) -> String {
-        format!("{:?}:{}", self.full_key, self.version)
+        format!("{}:{}", self.full_key, self.version)
     }
 }
 
@@ -279,5 +279,11 @@ mod test {
         m.state = Some(vec![State::Normal("a".to_string())]);
         assert_eq!(m.has_state_name("a"), true);
         assert_eq!(m.has_state_name("b"), false);
+    }
+
+    #[test]
+    fn meta_string_test(){
+        let m = Meta::new("hello").unwrap();
+        assert_eq!(m.meta_string(), "/B/hello:1");
     }
 }
