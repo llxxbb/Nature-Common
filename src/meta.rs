@@ -1,4 +1,4 @@
-use crate::State;
+use crate::{MetaSetting, State};
 use crate::state::States;
 
 use super::MetaType;
@@ -32,6 +32,10 @@ pub struct Meta {
     meta_type: MetaType,
 
     pub state: Option<States>,
+
+    pub is_state: bool,
+
+    pub setting: Option<MetaSetting>,
 }
 
 impl Default for Meta {
@@ -42,6 +46,8 @@ impl Default for Meta {
             version: 1,
             meta_type: MetaType::Business,
             state: None,
+            is_state: false,
+            setting: None,
         }
     }
 }
@@ -86,6 +92,8 @@ impl Meta {
                     version,
                     meta_type,
                     state: None,
+                    is_state: false,
+                    setting: None,
                 }
             })
         }
@@ -99,6 +107,8 @@ impl Meta {
             version: 1,
             meta_type,
             state: None,
+            is_state: false,
+            setting: None,
         }
     }
 
