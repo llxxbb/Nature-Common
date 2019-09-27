@@ -134,11 +134,8 @@ impl Meta {
 
     /// `meta_str`'s format : [full_key]:[version]
     pub fn from_string(meta_str: &str) -> Result<Meta> {
-        let x: Vec<&str> = meta_str.split(META_AND_VERSION_SEPARATOR).collect();
-        if x.len() != 2 {
-            return Err(NatureError::VerifyError("error meta string format".to_string()));
-        }
-        Self::from_full_key(x[0], x[1].parse()?)
+        let x = Self::make_tuple_from_str(meta_str)?;
+        Self::from_full_key(&x.0, x.1)
     }
 
     /// `full_key`'s format : /[biz type]/[biz key]
@@ -178,6 +175,18 @@ impl Meta {
 
     pub fn meta_string(&self) -> String {
         format!("{}:{}", self.full_key, self.version)
+    }
+
+    pub fn make_meta_string(full_key: &str, version: i32) -> String {
+        format!("{}:{}", full_key, version)
+    }
+
+    pub fn make_tuple_from_str(meta_str: &str) -> Result<(String, i32)> {
+        let x: Vec<&str> = meta_str.split(META_AND_VERSION_SEPARATOR).collect();
+        if x.len() != 2 {
+            return Err(NatureError::VerifyError("error meta string format".to_string()));
+        }
+        Ok((x[0].to_string(), x[1].parse::<i32>()?))
     }
 }
 
@@ -282,7 +291,7 @@ mod test {
     }
 
     #[test]
-    fn meta_string_test(){
+    fn meta_string_test() {
         let m = Meta::new("hello").unwrap();
         assert_eq!(m.meta_string(), "/B/hello:1");
     }
