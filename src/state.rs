@@ -51,7 +51,6 @@ impl State {
         // main progress
         while x < states.len() {
             let c = &states[x..x + 1];
-            dbg!(x, c);
             match c {
                 "," => {    // separator
                     if is_mutex {

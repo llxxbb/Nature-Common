@@ -172,7 +172,7 @@ mod test {
         let mut instance = Instance::new("hello").unwrap();
         assert_eq!(instance.id, 0);
         let _ = instance.fix_id();
-        assert_eq!(instance.id, 17399718179305179577446015748023824286);
+        assert_eq!(instance.id, 236868666885459381961175698559654450018);
     }
 
     #[test]
