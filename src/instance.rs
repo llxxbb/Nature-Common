@@ -19,10 +19,13 @@ pub struct Instance {
 
 impl Instance {
     pub fn new(key: &str) -> Result<Self> {
+        if key.is_empty() {
+            return Err(NatureError::VerifyError("key can not be empty".to_string()));
+        }
         Ok(Instance {
             id: 0,
             data: InstanceNoID {
-                meta: Meta::new(key)?,
+                meta: format!("/B/{}:1", key),
                 event_time: 0,
                 execute_time: 0,
                 create_time: 0,
@@ -36,10 +39,13 @@ impl Instance {
     }
 
     pub fn new_with_type(key: &str, meta: MetaType) -> Result<Self> {
+        if key.is_empty() {
+            return Err(NatureError::VerifyError("key can not be empty".to_string()));
+        }
         Ok(Instance {
             id: 0,
             data: InstanceNoID {
-                meta: Meta::new_with_type(key, meta)?,
+                meta: format!("{}/{}:1", meta.get_prefix(), key),
                 event_time: 0,
                 execute_time: 0,
                 create_time: 0,
@@ -52,10 +58,6 @@ impl Instance {
         })
     }
 
-    pub fn change_meta_type(&mut self, meta_type: MetaType) {
-        self.data.meta.set_meta_type(meta_type);
-    }
-
     pub fn fix_id(&mut self) -> Result<&mut Self> {
         if self.id == 0 {
             self.id = generate_id(&self.data)?;
@@ -63,8 +65,8 @@ impl Instance {
         Ok(self)
     }
 
-    pub fn check_and_fix_id<T, W>(&mut self, meta_cache_getter: fn(&mut Meta, fn(&Meta) -> Result<T>) -> Result<W>, meta_getter: fn(&Meta) -> Result<T>) -> Result<&mut Self> {
-        let _ = self.meta.get(meta_cache_getter, meta_getter)?;
+    pub fn check_and_fix_id<T, W>(&mut self, meta_cache_getter: fn(&str, fn(&str) -> Result<T>) -> Result<W>, meta_getter: fn(&str) -> Result<T>) -> Result<&mut Self> {
+        let _ = Meta::get(&self.meta, meta_cache_getter, meta_getter)?;
         self.fix_id()
     }
 }
@@ -95,7 +97,7 @@ impl Iterator for Instance {
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct InstanceNoID {
     /// This instance's Type
-    pub meta: Meta,
+    pub meta: String,
     /// The time that this instance exists
     pub event_time: i64,
     /// The time which plan to flow for this instance
@@ -223,10 +225,10 @@ mod test {
     #[test]
     fn can_not_get_from_cache() {
         let mut instance = Instance::new("/err").unwrap();
-        fn cache<T, W>(_: &mut Meta, _: fn(&Meta) -> Result<T>) -> Result<W> {
+        fn cache<T, W>(_: &str, _: fn(&str) -> Result<T>) -> Result<W> {
             Err(NatureError::VerifyError("cache error".to_string()))
         }
-        fn getter<T>(_: &Meta) -> Result<T> {
+        fn getter<T>(_: &str) -> Result<T> {
             Err(NatureError::VerifyError("getter error".to_string()))
         }
         let result = instance.check_and_fix_id::<String, String>(cache, getter);
@@ -236,10 +238,10 @@ mod test {
     #[test]
     fn can_get_from_cache() {
         let mut instance = Instance::new("/ok").unwrap();
-        fn cache<T>(_: &mut Meta, _: fn(&Meta) -> Result<T>) -> Result<String> {
+        fn cache<T>(_: &str, _: fn(&str) -> Result<T>) -> Result<String> {
             Ok("hello".to_string())
         }
-        fn getter<T>(_: &Meta) -> Result<T> {
+        fn getter<T>(_: &str) -> Result<T> {
             Err(NatureError::VerifyError("getter error".to_string()))
         }
         let result = instance.check_and_fix_id::<String, String>(cache, getter);

@@ -29,6 +29,20 @@ impl MetaType {
             _ => Err(NatureError::VerifyError("unknow prefix : [".to_string() + prefix + "]"))
         }
     }
+
+    pub fn check_type(meta: &str, m_type: MetaType) -> Result<()> {
+        let prefix = m_type.get_prefix();
+        let err = format!("meta string must begin with {}/", &prefix);
+        let err = Err(NatureError::VerifyError(err));
+        if meta.len() < 3 {
+            return err;
+        }
+        let x = &meta[0..2];
+        if x != format!("{}/", &prefix) {
+            return err;
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]

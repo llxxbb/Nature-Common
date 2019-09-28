@@ -1,4 +1,5 @@
 use crate::{MetaSetting, State};
+use crate::meta_string::MetaString;
 use crate::state::States;
 
 use super::MetaType;
@@ -7,7 +8,7 @@ use super::Result;
 
 /// separator for `Meta`'s key
 static PATH_SEPARATOR: char = '/';
-static META_AND_VERSION_SEPARATOR: &str = ":";
+pub static META_AND_VERSION_SEPARATOR: &str = ":";
 
 /// Business Metadata
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Ord, PartialOrd)]
@@ -53,8 +54,9 @@ impl Default for Meta {
 }
 
 impl Meta {
-    /// prefix "/B(usiness)" to the head of the string,.to avoid outer use"/S(ystem)" prefix.
-    fn key_standardize(biz: &mut String) -> Result<()> {
+    /// make start with "/" and remove "/" at the end
+    pub fn key_standardize(biz: &str) -> Result<String> {
+        let mut biz = biz.to_string();
         if biz.ends_with(PATH_SEPARATOR) {
             let last = biz.len() - 1;
             biz.remove(last);
@@ -65,51 +67,23 @@ impl Meta {
         if !biz.starts_with(PATH_SEPARATOR) {
             biz.insert(0, PATH_SEPARATOR);
         }
-        Ok(())
+        Ok(biz)
     }
 
-    /// version default to 1 and meta_type default to `Business`
-    pub fn new(key: &str) -> Result<Self> {
-        Self::new_with_version_and_type(key, 1, MetaType::Business)
-    }
-
-    /// version default to 1
-    pub fn new_with_type(key: &str, meta_type: MetaType) -> Result<Self> {
-        Self::new_with_version_and_type(key, 1, meta_type)
-    }
-
-    pub fn new_with_version_and_type(key: &str, version: i32, meta_type: MetaType) -> Result<Self> {
-        if meta_type == MetaType::Null {
-            return Ok(Self::new_null());
-        }
-        let mut key = key.to_string();
-        match Self::key_standardize(&mut key) {
-            Err(e) => Err(e),
-            Ok(_) => Ok({
-                Meta {
-                    key: key.clone(),
-                    full_key: meta_type.get_prefix() + &key,
-                    version,
-                    meta_type,
-                    state: None,
-                    is_state: false,
-                    setting: None,
-                }
-            })
-        }
-    }
-
-    pub fn new_null() -> Meta {
-        let meta_type = MetaType::Null;
-        Meta {
-            key: String::new(),
-            full_key: meta_type.get_prefix(),
-            version: 1,
+    pub fn new(key: &str, version: i32, meta_type: MetaType) -> Result<Self> {
+        let key = match meta_type {
+            MetaType::Null => "".to_string(),
+            _ => Self::key_standardize(key)?
+        };
+        Ok(Meta {
+            key: key.to_string(),
+            full_key: meta_type.get_prefix() + &key,
+            version,
             meta_type,
             state: None,
             is_state: false,
             setting: None,
-        }
+        })
     }
 
     pub fn get_key(&self) -> String {
@@ -132,17 +106,11 @@ impl Meta {
         self.full_key.clone() + META_AND_VERSION_SEPARATOR + &self.version.to_string()
     }
 
-    /// `meta_str`'s format : [full_key]:[version]
-    pub fn from_string(meta_str: &str) -> Result<Meta> {
-        let x = Self::make_tuple_from_str(meta_str)?;
-        Self::from_full_key(&x.0, x.1)
-    }
-
     /// `full_key`'s format : /[biz type]/[biz key]
     pub fn from_full_key(full_key: &str, version: i32) -> Result<Meta> {
         let err_msg = "illegal format for `full_key` : ".to_string() + full_key.clone();
         if full_key == "/N" {
-            return Meta::new_with_type(full_key, MetaType::Null);
+            return Meta::new(full_key, 1, MetaType::Null);
         }
         if full_key.len() < 3 {
             return Err(NatureError::VerifyError(err_msg));
@@ -151,12 +119,18 @@ impl Meta {
             return Err(NatureError::VerifyError(err_msg));
         }
         let meta_type = MetaType::from_prefix(&full_key[0..2])?;
-        Meta::new_with_version_and_type(&full_key[3..], version, meta_type)
+        Meta::new(&full_key[3..], version, meta_type)
     }
 
-    pub fn get<T, W>(&mut self, meta_cache_getter: fn(&mut Meta, fn(&Meta) -> Result<T>) -> Result<W>, meta_getter: fn(&Meta) -> Result<T>) -> Result<()> {
-        meta_cache_getter(self, meta_getter)?;
-        Ok(())
+    /// `meta_str`'s format : [full_key]:[version]
+    pub fn from_string(meta_str: &str) -> Result<Meta> {
+        let (full_key, version) = MetaString::make_tuple_from_str(meta_str)?;
+        Self::from_full_key(&full_key, version)
+    }
+
+    pub fn get<T, W>(meta_str: &str, meta_cache_getter: fn(&str, fn(&str) -> Result<T>) -> Result<W>, meta_getter: fn(&str) -> Result<T>) -> Result<W> {
+        let meta = meta_cache_getter(meta_str, meta_getter)?;
+        Ok(meta)
     }
 
     pub fn has_state(&self, state: &State) -> bool {
@@ -176,18 +150,6 @@ impl Meta {
     pub fn meta_string(&self) -> String {
         format!("{}:{}", self.full_key, self.version)
     }
-
-    pub fn make_meta_string(full_key: &str, version: i32) -> String {
-        format!("{}:{}", full_key, version)
-    }
-
-    pub fn make_tuple_from_str(meta_str: &str) -> Result<(String, i32)> {
-        let x: Vec<&str> = meta_str.split(META_AND_VERSION_SEPARATOR).collect();
-        if x.len() != 2 {
-            return Err(NatureError::VerifyError("error meta string format".to_string()));
-        }
-        Ok((x[0].to_string(), x[1].parse::<i32>()?))
-    }
 }
 
 
@@ -198,7 +160,7 @@ mod test {
     #[test]
     fn key_can_not_be_null() {
         let key = String::new();
-        let rtn = Meta::new(&key);
+        let rtn = Meta::new(&key, 1, MetaType::Business);
         if let Err(NatureError::VerifyError(x)) = rtn {
             assert_eq!(x, "key length can't be zero");
         } else {
@@ -206,7 +168,7 @@ mod test {
         }
 
         let key = "/".to_string();
-        let rtn = Meta::new(&key);
+        let rtn = Meta::new(&key, 1, MetaType::Business);
         if let Err(NatureError::VerifyError(x)) = rtn {
             assert_eq!(x, "key length can't be zero");
         } else {
@@ -217,17 +179,12 @@ mod test {
     #[test]
     fn key_can_be_empty_except_for_null_meta_type() {
         // key is empty
-        let meta = Meta::new_with_type("", MetaType::Null).unwrap();
+        let meta = Meta::new("", 1, MetaType::Null).unwrap();
         assert_eq!(MetaType::Null, meta.get_meta_type());
         assert_eq!("/N", meta.get_full_key());
 
         // key is not empty
-        let meta = Meta::new_with_type("not empty", MetaType::Null).unwrap();
-        assert_eq!(MetaType::Null, meta.get_meta_type());
-        assert_eq!("/N", meta.get_full_key());
-
-        // call `new_null` directly
-        let meta = Meta::new_null();
+        let meta = Meta::new("not empty", 1, MetaType::Null).unwrap();
         assert_eq!(MetaType::Null, meta.get_meta_type());
         assert_eq!("/N", meta.get_full_key());
     }
@@ -237,9 +194,9 @@ mod test {
     fn standardize_no_separator_at_beginning() {
         println!("----------------- standardize_no_separator_at_beginning --------------------");
         let key = "a/b/c/".to_string();
-        let rtn = Meta::new(&key);
+        let rtn = Meta::new(&key, 1, MetaType::Business);
         assert_eq!("/a/b/c", rtn.unwrap().key);
-        let rtn = Meta::new(&key);
+        let rtn = Meta::new(&key, 1, MetaType::Business);
         assert_eq!("/B/a/b/c", rtn.unwrap().get_full_key());
     }
 
@@ -247,34 +204,34 @@ mod test {
     fn get_full_key() {
         println!("----------------- standardize_no_separator_at_beginning --------------------");
         let key = "a/b/c/".to_string();
-        let rtn = Meta::new_with_type(&key.clone(), MetaType::System);
+        let rtn = Meta::new(&key, 1, MetaType::System);
         assert_eq!(rtn.unwrap().get_full_key(), "/S/a/b/c");
-        let rtn = Meta::new_with_type(&key, MetaType::Dynamic);
+        let rtn = Meta::new(&key, 1, MetaType::Dynamic);
         assert_eq!(rtn.unwrap().get_full_key(), "/D/a/b/c");
-        let rtn = Meta::new_with_type(&key, MetaType::Business);
+        let rtn = Meta::new(&key, 1, MetaType::Business);
         assert_eq!(rtn.unwrap().get_full_key(), "/B/a/b/c");
-        let rtn = Meta::new_with_type(&key, MetaType::Null);
+        let rtn = Meta::new(&key, 1, MetaType::Null);
         assert_eq!(rtn.unwrap().get_full_key(), "/N");
     }
 
     #[test]
-    fn from_full_key() {
+    fn from_meta_str() {
         // error full_key
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : ".to_string())), Meta::from_full_key("", 1));
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /s".to_string())), Meta::from_full_key("/s", 1));
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /ss".to_string())), Meta::from_full_key("/ss", 1));
-        assert_eq!(Err(NatureError::VerifyError("unknow prefix : [/s]".to_string())), Meta::from_full_key("/s/s", 1));
-        assert_eq!(Meta::new_with_type("/N", MetaType::Null), Meta::from_full_key("/N", 1));
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /Na".to_string())), Meta::from_full_key("/Na", 1));
-        assert_eq!(Meta::new_with_type("/a", MetaType::Null), Meta::from_full_key("/N/a", 1));
-        assert_eq!(Meta::new_with_type("/hello", MetaType::Dynamic), Meta::from_full_key("/D/hello", 1));
-        assert_eq!(Meta::new_with_type("/world", MetaType::System), Meta::from_full_key("/S/world", 1));
-        assert_eq!(Meta::new_with_type("/my", MetaType::Business), Meta::from_full_key("/B/my", 1));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : ".to_string())), Meta::from_string(":1"));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /s".to_string())), Meta::from_string("/s:1"));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /ss".to_string())), Meta::from_string("/ss:1"));
+        assert_eq!(Err(NatureError::VerifyError("unknow prefix : [/s]".to_string())), Meta::from_string("/s/s:1"));
+        assert_eq!(Meta::new("/N", 1, MetaType::Null), Meta::from_string("/N:1"));
+        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /Na".to_string())), Meta::from_string("/Na:1"));
+        assert_eq!(Meta::new("/a", 1, MetaType::Null), Meta::from_string("/N/a:1"));
+        assert_eq!(Meta::new("/hello", 1, MetaType::Dynamic), Meta::from_string("/D/hello:1"));
+        assert_eq!(Meta::new("/world", 1, MetaType::System), Meta::from_string("/S/world:1"));
+        assert_eq!(Meta::new("/my", 1, MetaType::Business), Meta::from_string("/B/my:1"));
     }
 
     #[test]
     fn has_state_test() {
-        let mut m = Meta::new("hello").unwrap();
+        let mut m = Meta::new("hello", 1, MetaType::Business).unwrap();
         assert_eq!(m.has_state(&State::Normal("a".to_string())), false);
         m.state = Some(vec![State::Normal("a".to_string())]);
         assert_eq!(m.has_state(&State::Normal("a".to_string())), true);
@@ -283,7 +240,7 @@ mod test {
 
     #[test]
     fn has_state_name_test() {
-        let mut m = Meta::new("hello").unwrap();
+        let mut m = Meta::new("hello", 1, MetaType::Business).unwrap();
         assert_eq!(m.has_state_name("a"), false);
         m.state = Some(vec![State::Normal("a".to_string())]);
         assert_eq!(m.has_state_name("a"), true);
@@ -292,7 +249,7 @@ mod test {
 
     #[test]
     fn meta_string_test() {
-        let m = Meta::new("hello").unwrap();
+        let m = Meta::new("hello", 1, MetaType::Business).unwrap();
         assert_eq!(m.meta_string(), "/B/hello:1");
     }
 }
