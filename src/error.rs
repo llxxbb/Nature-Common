@@ -8,30 +8,11 @@ use uuid;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum NatureError {
-    // outer input verify errors
-    SerializeError(String),
     VerifyError(String),
-    MetaNotDefined(String),
-    InstanceStatusVersionConflict,
-    UuidParseError,
-
-    // out converter errors
     ConverterLogicalError(String),
-    ConverterEnvironmentError(String),
-    ConverterProtocalError(String),
-
-    // Business Contract errors
-    TargetInstanceNotIncludeStatus(String),
-    TargetInstanceContainsExcludeStatus(String),
-
-    // internal errors
-    DaoEnvironmentError(String),
-    DaoLogicalError(String),
     DaoDuplicated(String),
-    R2D2Error(String),
     SystemError(String),
-    Break,
-
+    EnvironmentError(String),
 }
 
 impl Error for NatureError {}
@@ -45,25 +26,25 @@ impl Display for NatureError {
 
 impl From<serde_json::error::Error> for NatureError {
     fn from(e: serde_json::error::Error) -> Self {
-        NatureError::SerializeError(e.to_string())
+        NatureError::VerifyError(e.to_string())
     }
 }
 
 impl From<uuid::parser::ParseError> for NatureError {
-    fn from(_e: uuid::parser::ParseError) -> Self {
-        NatureError::UuidParseError
+    fn from(e: uuid::parser::ParseError) -> Self {
+        NatureError::VerifyError(e.to_string())
     }
 }
 
 impl From<std::num::ParseIntError> for NatureError {
-    fn from(_: std::num::ParseIntError) -> Self {
-        NatureError::UuidParseError
+    fn from(e: std::num::ParseIntError) -> Self {
+        NatureError::VerifyError(e.to_string())
     }
 }
 
 impl<T> From<SendError<T>> for NatureError {
     fn from(err: SendError<T>) -> Self {
-        NatureError::SystemError(err.to_string())
+        NatureError::EnvironmentError(err.to_string())
     }
 }
 
