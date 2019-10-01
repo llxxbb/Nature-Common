@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
+use crate::{Result, SelfRouteInstance};
 use crate::error::NatureError;
-use crate::Result;
 
 use super::Instance;
 
@@ -14,8 +14,12 @@ pub enum ConverterReturned {
     None,
     /// Tell `Nature` the task will be processed asynchronously, and it will callback to `Nature` later will result are ready.
     Delay(u32),
-    /// Give result to `Nature`
+    /// return instances
     Instances(Vec<Instance>),
+    /// return `SelfRouteInstance`
+    SelfRoute(Vec<SelfRouteInstance>),
+    /// return mixed result
+    Mixed((Vec<Instance>, Vec<SelfRouteInstance>)),
 }
 
 #[derive(Serialize, Deserialize)]
