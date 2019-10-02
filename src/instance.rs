@@ -27,7 +27,6 @@ impl Instance {
             id: 0,
             data: InstanceNoID {
                 meta: format!("/B{}:1", key),
-                event_time: 0,
                 execute_time: 0,
                 create_time: 0,
                 content: "".to_string(),
@@ -47,7 +46,6 @@ impl Instance {
             id: 0,
             data: InstanceNoID {
                 meta: format!("{}/{}:1", meta.get_prefix(), key),
-                event_time: 0,
                 execute_time: 0,
                 create_time: 0,
                 content: "".to_string(),
@@ -110,8 +108,6 @@ impl Iterator for Instance {
 pub struct InstanceNoID {
     /// This instance's Type
     pub meta: String,
-    /// The time that this instance exists
-    pub event_time: i64,
     /// The time which plan to flow for this instance
     pub execute_time: i64,
     /// When this instance created in db
