@@ -22,10 +22,11 @@ impl Instance {
         if key.is_empty() {
             return Err(NatureError::VerifyError("key can not be empty".to_string()));
         }
+        let key = Meta::key_standardize(key)?;
         Ok(Instance {
             id: 0,
             data: InstanceNoID {
-                meta: format!("/B/{}:1", key),
+                meta: format!("/B{}:1", key),
                 event_time: 0,
                 execute_time: 0,
                 create_time: 0,
@@ -264,6 +265,14 @@ mod test {
         assert_eq!(Instance::meta_must_same(&vec1).is_err(), true);
         let vec1 = vec![Instance::new("hello").unwrap(), Instance::new("hello").unwrap()];
         assert_eq!(Instance::meta_must_same(&vec1).is_err(), false);
+    }
+
+    #[test]
+    fn instance_new_test() {
+        let ins = Instance::new("hello").unwrap();
+        assert_eq!(ins.meta, "/B/hello:1");
+        let ins = Instance::new("/hello").unwrap();
+        assert_eq!(ins.meta, "/B/hello:1");
     }
 }
 
