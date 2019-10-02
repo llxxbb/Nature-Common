@@ -69,6 +69,17 @@ impl Instance {
         let _ = Meta::get(&self.meta, meta_cache_getter, meta_getter)?;
         self.fix_id()
     }
+
+    pub fn meta_must_same(is: &Vec<Self>) -> Result<()> {
+        if is.len() < 2 {
+            return Ok(());
+        }
+        let option = is[1..].iter().find(|x| { !x.meta.eq(&is[0].meta) });
+        match option {
+            Some(_) => Err(NatureError::VerifyError("instances's meta must be same!".to_string())),
+            None => Ok(())
+        }
+    }
 }
 
 
@@ -221,7 +232,6 @@ mod test {
         assert_eq!(ins.states.contains("d"), true);
     }
 
-
     #[test]
     fn can_not_get_from_cache() {
         let mut instance = Instance::new("/err").unwrap();
@@ -246,6 +256,14 @@ mod test {
         }
         let result = instance.check_and_fix_id::<String, String>(cache, getter);
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn same_meta_test() {
+        let vec1 = vec![Instance::new("hello").unwrap(), Instance::new("world").unwrap()];
+        assert_eq!(Instance::meta_must_same(&vec1).is_err(), true);
+        let vec1 = vec![Instance::new("hello").unwrap(), Instance::new("hello").unwrap()];
+        assert_eq!(Instance::meta_must_same(&vec1).is_err(), false);
     }
 }
 
