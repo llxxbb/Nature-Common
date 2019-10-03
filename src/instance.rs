@@ -3,6 +3,8 @@ use std::collections::HashSet;
 use std::iter::Iterator;
 use std::ops::{Deref, DerefMut};
 
+use chrono::prelude::*;
+
 use crate::{generate_id, NatureError, Result, TargetState};
 use crate::converter::DynamicConverter;
 use crate::meta_type::MetaType;
@@ -14,7 +16,11 @@ use super::Meta;
 pub struct Instance {
     /// A unique value used to distinguish other instance
     pub id: u128,
-    pub data: InstanceNoID,
+    pub data: BizObject,
+    /// The time which plan to flow for this instance
+    pub execute_time: i64,
+    /// When this instance created in db
+    pub create_time: i64,
 }
 
 impl Instance {
@@ -25,16 +31,16 @@ impl Instance {
         let key = Meta::key_standardize(key)?;
         Ok(Instance {
             id: 0,
-            data: InstanceNoID {
+            data: BizObject {
                 meta: format!("/B{}:1", key),
-                execute_time: 0,
-                create_time: 0,
                 content: "".to_string(),
                 context: HashMap::new(),
                 states: HashSet::new(),
                 state_version: 0,
                 from: None,
             },
+            execute_time: 0,
+            create_time: 0,
         })
     }
 
@@ -44,16 +50,16 @@ impl Instance {
         }
         Ok(Instance {
             id: 0,
-            data: InstanceNoID {
+            data: BizObject {
                 meta: format!("{}/{}:1", meta.get_prefix(), key),
-                execute_time: 0,
-                create_time: 0,
                 content: "".to_string(),
                 context: HashMap::new(),
                 states: HashSet::new(),
                 state_version: 0,
                 from: None,
             },
+            execute_time: 0,
+            create_time: 0,
         })
     }
 
@@ -64,8 +70,15 @@ impl Instance {
         Ok(self)
     }
 
-    pub fn check_and_fix_id<T, W>(&mut self, meta_cache_getter: fn(&str, fn(&str) -> Result<T>) -> Result<W>, meta_getter: fn(&str) -> Result<T>) -> Result<&mut Self> {
+    pub fn revise<T, W>(&mut self, meta_cache_getter: fn(&str, fn(&str) -> Result<T>) -> Result<W>, meta_getter: fn(&str) -> Result<T>) -> Result<&mut Self> {
         let _ = Meta::get(&self.meta, meta_cache_getter, meta_getter)?;
+        let now = Local::now().timestamp_millis();
+        if self.create_time == 0 {
+            self.create_time = now;
+        }
+        if self.execute_time == 0 {
+            self.execute_time = now;
+        }
         self.fix_id()
     }
 
@@ -83,7 +96,7 @@ impl Instance {
 
 
 impl Deref for Instance {
-    type Target = InstanceNoID;
+    type Target = BizObject;
 
     fn deref(&self) -> &<Self as Deref>::Target {
         &self.data
@@ -105,13 +118,9 @@ impl Iterator for Instance {
 
 /// A snapshot for a particular `Meta`
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
-pub struct InstanceNoID {
+pub struct BizObject {
     /// This instance's Type
     pub meta: String,
-    /// The time which plan to flow for this instance
-    pub execute_time: i64,
-    /// When this instance created in db
-    pub create_time: i64,
     /// What contend in this instance for the `Meta`
     pub content: String,
     /// Is a json for a `Map[key, value]` which contents other instance for other `Meta`'s.
@@ -130,7 +139,7 @@ pub struct InstanceNoID {
     pub from: Option<FromInstance>,
 }
 
-impl InstanceNoID {
+impl BizObject {
     pub fn modify_state(&mut self, add_and_delete: TargetState) {
         // delete first
         if let Some(x) = add_and_delete.remove {
@@ -167,6 +176,8 @@ impl SelfRouteInstance {
         Instance {
             id: 0,
             data: self.instance.data.clone(),
+            execute_time: 0,
+            create_time: 0,
         }
     }
 }
@@ -176,11 +187,15 @@ mod test {
     use super::*;
 
     #[test]
-    fn automatic_generate_id() {
+    fn revise_test() {
         let mut instance = Instance::new("hello").unwrap();
         assert_eq!(instance.id, 0);
-        let _ = instance.fix_id();
-        assert_eq!(instance.id, 236868666885459381961175698559654450018);
+        assert_eq!(instance.execute_time, 0);
+        assert_eq!(instance.create_time, 0);
+        let _ = instance.revise(meta_cache, meta_getter);
+        assert_eq!(instance.id, 110743375152055492399589371372438031015);
+        assert_eq!(instance.execute_time > 0, true);
+        assert_eq!(instance.create_time > 0, true);
     }
 
     #[test]
@@ -238,7 +253,7 @@ mod test {
         fn getter<T>(_: &str) -> Result<T> {
             Err(NatureError::VerifyError("getter error".to_string()))
         }
-        let result = instance.check_and_fix_id::<String, String>(cache, getter);
+        let result = instance.revise::<String, String>(cache, getter);
         assert!(result.is_err());
     }
 
@@ -251,7 +266,7 @@ mod test {
         fn getter<T>(_: &str) -> Result<T> {
             Err(NatureError::VerifyError("getter error".to_string()))
         }
-        let result = instance.check_and_fix_id::<String, String>(cache, getter);
+        let result = instance.revise::<String, String>(cache, getter);
         assert!(result.is_ok());
     }
 
@@ -269,6 +284,14 @@ mod test {
         assert_eq!(ins.meta, "/B/hello:1");
         let ins = Instance::new("/hello").unwrap();
         assert_eq!(ins.meta, "/B/hello:1");
+    }
+
+    fn meta_cache(m: &str, _: fn(&str) -> Result<String>) -> Result<Meta> {
+        Meta::from_string(m)
+    }
+
+    fn meta_getter(_: &str) -> Result<String> {
+        Ok("".to_string())
     }
 }
 
