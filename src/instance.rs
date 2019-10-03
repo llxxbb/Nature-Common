@@ -63,15 +63,12 @@ impl Instance {
         })
     }
 
-    pub fn fix_id(&mut self) -> Result<&mut Self> {
-        if self.id == 0 {
-            self.id = generate_id(&self.data)?;
-        }
-        Ok(self)
+    pub fn check_and_revise<T, W>(&mut self, meta_cache_getter: fn(&str, fn(&str) -> Result<T>) -> Result<W>, meta_getter: fn(&str) -> Result<T>) -> Result<&mut Self> {
+        let _ = Meta::get(&self.meta, meta_cache_getter, meta_getter)?;
+        self.revise()
     }
 
-    pub fn revise<T, W>(&mut self, meta_cache_getter: fn(&str, fn(&str) -> Result<T>) -> Result<W>, meta_getter: fn(&str) -> Result<T>) -> Result<&mut Self> {
-        let _ = Meta::get(&self.meta, meta_cache_getter, meta_getter)?;
+    pub fn revise(&mut self) -> Result<&mut Self> {
         let now = Local::now().timestamp_millis();
         if self.create_time == 0 {
             self.create_time = now;
@@ -79,7 +76,10 @@ impl Instance {
         if self.execute_time == 0 {
             self.execute_time = now;
         }
-        self.fix_id()
+        if self.id == 0 {
+            self.id = generate_id(&self.data)?;
+        }
+        Ok(self)
     }
 
     pub fn meta_must_same(is: &Vec<Self>) -> Result<()> {
@@ -192,7 +192,7 @@ mod test {
         assert_eq!(instance.id, 0);
         assert_eq!(instance.execute_time, 0);
         assert_eq!(instance.create_time, 0);
-        let _ = instance.revise(meta_cache, meta_getter);
+        let _ = instance.check_and_revise(meta_cache, meta_getter);
         assert_eq!(instance.id, 110743375152055492399589371372438031015);
         assert_eq!(instance.execute_time > 0, true);
         assert_eq!(instance.create_time > 0, true);
@@ -253,7 +253,7 @@ mod test {
         fn getter<T>(_: &str) -> Result<T> {
             Err(NatureError::VerifyError("getter error".to_string()))
         }
-        let result = instance.revise::<String, String>(cache, getter);
+        let result = instance.check_and_revise::<String, String>(cache, getter);
         assert!(result.is_err());
     }
 
@@ -266,7 +266,7 @@ mod test {
         fn getter<T>(_: &str) -> Result<T> {
             Err(NatureError::VerifyError("getter error".to_string()))
         }
-        let result = instance.revise::<String, String>(cache, getter);
+        let result = instance.check_and_revise::<String, String>(cache, getter);
         assert!(result.is_ok());
     }
 
