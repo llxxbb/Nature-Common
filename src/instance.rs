@@ -154,8 +154,9 @@ impl BizObject {
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct FromInstance {
-    pub meta: Meta,
-    pub status_version: i32,
+    pub id: u128,
+    pub meta: String,
+    pub state_version: i32,
 }
 
 
