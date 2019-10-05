@@ -140,13 +140,13 @@ pub struct BizObject {
 }
 
 impl BizObject {
-    pub fn modify_state(&mut self, add_and_delete: TargetState) {
+    pub fn modify_state(&mut self, add_and_delete: &TargetState) {
         // delete first
-        if let Some(x) = add_and_delete.remove {
+        if let Some(x) = &add_and_delete.remove {
             x.iter().for_each(|one| { self.states.remove(one); });
         }
         // add then
-        if let Some(x) = add_and_delete.add {
+        if let Some(x) = &add_and_delete.add {
             x.iter().for_each(|one| { self.states.insert(one.clone()); });
         }
     }
@@ -193,7 +193,7 @@ mod test {
         assert_eq!(instance.execute_time, 0);
         assert_eq!(instance.create_time, 0);
         let _ = instance.check_and_revise(meta_cache, meta_getter);
-        assert_eq!(instance.id, 110743375152055492399589371372438031015);
+        assert_eq!(instance.id, 326682805267673639322142205040419066191);
         assert_eq!(instance.execute_time > 0, true);
         assert_eq!(instance.create_time > 0, true);
     }
@@ -202,19 +202,19 @@ mod test {
     fn modify_state() {
         let mut ins = Instance::new("hello").unwrap();
         assert_eq!(ins.states.len(), 0);
-        ins.modify_state(TargetState {
+        ins.modify_state(&TargetState {
             add: None,
             remove: None,
         });
         assert_eq!(ins.states.len(), 0);
-        ins.modify_state(TargetState {
+        ins.modify_state(&TargetState {
             add: Some(vec!["a".to_string(), "b".to_string()]),
             remove: None,
         });
         assert_eq!(ins.states.len(), 2);
         assert_eq!(ins.states.contains("a"), true);
         assert_eq!(ins.states.contains("b"), true);
-        ins.modify_state(TargetState {
+        ins.modify_state(&TargetState {
             add: Some(vec!["c".to_string(), "d".to_string()]),
             remove: Some(vec!["a".to_string()]),
         });
@@ -222,21 +222,21 @@ mod test {
         assert_eq!(ins.states.contains("b"), true);
         assert_eq!(ins.states.contains("c"), true);
         assert_eq!(ins.states.contains("d"), true);
-        ins.modify_state(TargetState {
+        ins.modify_state(&TargetState {
             add: None,
             remove: Some(vec!["b".to_string(), "c".to_string()]),
         });
         assert_eq!(ins.states.len(), 1);
         assert_eq!(ins.states.contains("d"), true);
         // add same
-        ins.modify_state(TargetState {
+        ins.modify_state(&TargetState {
             add: Some(vec!["d".to_string()]),
             remove: None,
         });
         assert_eq!(ins.states.len(), 1);
         assert_eq!(ins.states.contains("d"), true);
         // remove not exists
-        ins.modify_state(TargetState {
+        ins.modify_state(&TargetState {
             add: None,
             remove: Some(vec!["b".to_string(), "c".to_string()]),
         });
