@@ -23,7 +23,7 @@ pub enum ConverterReturned {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct CallOutParameter {
+pub struct ConverterParameter {
     pub from: Instance,
     pub last_status: Option<Instance>,
     /// This is used for callback
@@ -31,7 +31,7 @@ pub struct CallOutParameter {
 }
 
 pub trait ConverterTrait {
-    fn convert(para: CallOutParameter) -> ConverterReturned;
+    fn convert(para: ConverterParameter) -> ConverterReturned;
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
