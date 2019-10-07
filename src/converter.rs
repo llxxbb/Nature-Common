@@ -25,7 +25,7 @@ pub enum ConverterReturned {
 #[derive(Serialize, Deserialize)]
 pub struct ConverterParameter {
     pub from: Instance,
-    pub last_status: Option<Instance>,
+    pub last_state: Option<Instance>,
     /// This is used for callback
     pub carrier_id: Vec<u8>,
 }
