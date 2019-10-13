@@ -5,6 +5,7 @@ use crate::error::NatureError;
 
 use super::Instance;
 
+#[derive(Debug)]
 pub enum ConverterReturned {
     /// This will break process for ever.
     LogicalError(String),
