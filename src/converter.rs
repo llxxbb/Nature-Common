@@ -50,6 +50,8 @@ pub enum Protocol {
     LocalRust,
     Http,
     Https,
+    /// Nature will automatically implement the converter. it can't be used by user.
+    Auto,
 }
 
 impl FromStr for Protocol {
@@ -85,8 +87,8 @@ pub struct Executor {
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default)]
     pub group: String,
-    #[serde(skip_serializing_if = "is_zero")]
-    #[serde(default)]
+    #[serde(skip_serializing_if = "is_one")]
+    #[serde(default = "one")]
     pub proportion: u32,
 }
 
@@ -96,16 +98,27 @@ impl Executor {
             protocol: Protocol::LocalRust,
             url: path.to_string(),
             group: "".to_string(),
-            proportion: 0,
+            proportion: 1,
+        }
+    }
+
+    pub fn new_auto() -> Self {
+        Executor {
+            protocol: Protocol::Auto,
+            url: "".to_string(),
+            group: "".to_string(),
+            proportion: 1,
         }
     }
 }
 
 /// This is only used for serialize
 #[allow(clippy::trivially_copy_pass_by_ref)]
-fn is_zero(num: &u32) -> bool {
-    *num == 0
+fn is_one(num: &u32) -> bool {
+    *num == 1
 }
+
+fn one() -> u32 { 1 }
 
 
 #[cfg(test)]
@@ -114,21 +127,20 @@ mod test {
 
     #[test]
     fn serde_executor_with_option_weight() {
-        let mut ewe = Executor {
+        let mut exe = Executor {
             protocol: Protocol::LocalRust,
             url: "".to_string(),
             group: "".to_string(),
-            proportion: 0,
+            proportion: 1,
         };
-        let ewe_s = serde_json::to_string(&ewe).unwrap();
+        let ewe_s = serde_json::to_string(&exe).unwrap();
         assert_eq!(ewe_s, "{\"protocol\":\"LocalRust\"}");
-        ewe.proportion = 5;
-        let ewe_s = serde_json::to_string(&ewe).unwrap();
+        let ewe_dw: Executor = serde_json::from_str(&ewe_s).unwrap();
+        assert_eq!(ewe_dw, exe);
+        exe.proportion = 5;
+        let ewe_s = serde_json::to_string(&exe).unwrap();
         assert_eq!(ewe_s, "{\"protocol\":\"LocalRust\",\"proportion\":5}");
         let ewe_dw: Executor = serde_json::from_str(&ewe_s).unwrap();
-        assert_eq!(ewe, ewe_dw);
-        let ewe_s = "{\"protocol\":\"LocalRust\"}";
-        let ewe_dw: Executor = serde_json::from_str(&ewe_s).unwrap();
-        assert_eq!(ewe_dw.proportion, 0);
+        assert_eq!(exe, ewe_dw);
     }
 }
