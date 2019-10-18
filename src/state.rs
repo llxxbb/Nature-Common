@@ -1,7 +1,8 @@
 use std::fmt::Write;
 
-use crate::NatureError;
+use crate::{NatureError, Result};
 
+/// It can't have the state with same name.
 pub type States = Vec<State>;
 
 /// The structure for defined state in meta
@@ -36,7 +37,7 @@ impl State {
         rtn
     }
 
-    pub fn string_to_states(states: &str) -> Result<(States, usize), NatureError> {
+    pub fn string_to_states(states: &str) -> Result<(States, usize)> {
         // check length
         if states.len() < 1 {
             return Err(NatureError::VerifyError("states string should not be empty".to_string()));
@@ -167,6 +168,26 @@ impl State {
             State::Mutex(_) => "".to_string(),
             State::Parent(s, _) => s.clone()
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Default, Debug, Clone, PartialEq, Eq)]
+pub struct StatePath {
+    pub is_mutex: bool,
+    pub desc_seq: Vec<CheckType>,
+}
+
+/// tyep and it's position where it is in the path
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub enum CheckType {
+    Normal(u16),
+    Parent(u16),
+    Mutex(u16),
+}
+
+impl Default for CheckType {
+    fn default() -> Self {
+        CheckType::Parent(0)
     }
 }
 

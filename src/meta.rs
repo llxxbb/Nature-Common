@@ -1,5 +1,8 @@
-use crate::{MetaSetting, State};
+use std::collections::{HashMap, HashSet};
+
+use crate::{CheckType, MetaSetting, State, StatePath};
 use crate::meta_string::MetaString;
+use crate::NatureError::VerifyError;
 use crate::state::States;
 
 use super::MetaType;
@@ -11,7 +14,7 @@ static PATH_SEPARATOR: char = '/';
 pub static META_AND_VERSION_SEPARATOR: &str = ":";
 
 /// Business Metadata
-#[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Ord, PartialOrd)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Meta {
     /// # Identify a `Meta`.
     ///
@@ -32,12 +35,15 @@ pub struct Meta {
     /// A `Meta`'s type
     meta_type: MetaType,
 
-    pub state: Option<States>,
+    state: Option<States>,
 
-    pub is_state: bool,
+    is_state: bool,
 
-    pub setting: Option<MetaSetting>,
+    setting: Option<MetaSetting>,
+
+    check_list: HashMap<String, StatePath>,
 }
+
 
 impl Default for Meta {
     fn default() -> Self {
@@ -49,6 +55,7 @@ impl Default for Meta {
             state: None,
             is_state: false,
             setting: None,
+            check_list: Default::default(),
         }
     }
 }
@@ -83,6 +90,7 @@ impl Meta {
             state: None,
             is_state: false,
             setting: None,
+            check_list: Default::default(),
         })
     }
 
@@ -133,22 +141,128 @@ impl Meta {
         Ok(meta)
     }
 
-    pub fn has_state(&self, state: &State) -> bool {
-        match &self.state {
-            None => false,
-            Some(x) => x.iter().find(|one| { one.include(state) }).is_some()
-        }
-    }
-
     pub fn has_state_name(&self, name: &str) -> bool {
-        match &self.state {
-            None => false,
-            Some(x) => x.iter().find(|one| { one.has_name(name) }).is_some()
-        }
+        let option = self.check_list.get(name);
+        option.is_some()
     }
 
     pub fn meta_string(&self) -> String {
         format!("{}:{}", self.full_key, self.version)
+    }
+
+    pub fn set_states(&mut self, states: Option<States>) -> Result<()> {
+        match states {
+            Some(ss) => {
+                Self::avoid_same_name(&ss, &self.get_string())?;
+                self.init_check_list(&ss, 0, &mut Default::default());
+                self.state = Some(ss);
+                self.is_state = true;
+            }
+            _ => self.state = None
+        }
+        Ok(())
+    }
+
+    fn init_check_list(&mut self, ss: &States, id: u16, path: &mut StatePath) {
+        let mut id = id;
+        ss.iter().for_each(|s| {
+            id += 1;
+            match s {
+                State::Normal(name) => {
+                    let mut new = path.clone();
+                    new.desc_seq.insert(0, CheckType::Normal(id));
+                    self.check_list.insert(name.to_string(), new);
+                }
+                State::Parent(_, nss) => {
+                    let mut new = path.clone();
+                    new.desc_seq.insert(0, CheckType::Parent(id));
+                    self.init_check_list(nss, id, &mut new);
+                }
+                State::Mutex(nss) => {
+                    let mut new = path.clone();
+                    new.is_mutex = true;
+                    new.desc_seq.insert(0, CheckType::Mutex(id));
+                    self.init_check_list(nss, id, &mut new);
+                }
+            }
+        })
+    }
+
+    pub fn verify_state(&self, input: &HashSet<String>) -> Result<()> {
+        if !self.is_state {
+            return Err(VerifyError(format!("[{}] is not a state meta", self.get_string())));
+        }
+        let mut map: HashMap<u16, u16> = HashMap::new();
+        for one in input {
+            let option = self.check_list.get(one);
+            // undefined
+            if option.is_none() {
+                let msg = format!("[{}] does not defined in meta: {}", one, self.meta_string());
+                warn!("{}", &msg);
+                return Err(NatureError::VerifyError(msg));
+            }
+            // not mutex
+            let path = option.unwrap();
+            if !path.is_mutex {
+                continue;
+            }
+            // mutex
+            let mut last: u16 = 0;
+            for op in &path.desc_seq {
+                match op {
+                    CheckType::Normal(id) => { last = *id; }
+                    CheckType::Parent(id) => { last = *id; }
+                    CheckType::Mutex(id) => {
+                        let cached_p = map.get(id);
+                        if let Some(e) = cached_p {
+                            if *e != last {
+                                let msg = format!("[{}] mutex conflict for meta: {}", one, self.meta_string());
+                                warn!("{}", &msg);
+                                return Err(NatureError::VerifyError(msg));
+                            }
+                        } else {
+                            map.insert(*id, last);
+                            last = *id;
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub fn get_states(&self) -> Option<States> {
+        self.state.clone()
+    }
+    pub fn is_state(&self) -> bool {
+        self.is_state
+    }
+
+    fn avoid_same_name(s: &States, string_meta: &str) -> Result<()> {
+        let mut set: HashSet<String> = HashSet::new();
+        for one in s {
+            if !set.insert(one.get_name()) {
+                return Err(NatureError::VerifyError(format!("repeated state name: {:?}, for `Meta`: {:?}", one.get_name(), string_meta)));
+            }
+        }
+        Ok(())
+    }
+
+    pub fn set_setting(&mut self, settings: &str) -> Result<()> {
+        if !settings.is_empty() {
+            let setting: MetaSetting = serde_json::from_str(settings)?;
+            if setting.is_state {
+                self.is_state = true;
+            }
+            self.setting = Some(setting);
+        } else {
+            self.setting = None;
+        }
+        Ok(())
+    }
+
+    pub fn get_setting(&self) -> Option<MetaSetting> {
+        self.setting.clone()
     }
 }
 
@@ -230,19 +344,10 @@ mod test {
     }
 
     #[test]
-    fn has_state_test() {
-        let mut m = Meta::new("hello", 1, MetaType::Business).unwrap();
-        assert_eq!(m.has_state(&State::Normal("a".to_string())), false);
-        m.state = Some(vec![State::Normal("a".to_string())]);
-        assert_eq!(m.has_state(&State::Normal("a".to_string())), true);
-        assert_eq!(m.has_state(&State::Normal("b".to_string())), false);
-    }
-
-    #[test]
     fn has_state_name_test() {
         let mut m = Meta::new("hello", 1, MetaType::Business).unwrap();
         assert_eq!(m.has_state_name("a"), false);
-        m.state = Some(vec![State::Normal("a".to_string())]);
+        m.set_states(Some(vec![State::Normal("a".to_string())]));
         assert_eq!(m.has_state_name("a"), true);
         assert_eq!(m.has_state_name("b"), false);
     }
@@ -251,5 +356,117 @@ mod test {
     fn meta_string_test() {
         let m = Meta::new("hello", 1, MetaType::Business).unwrap();
         assert_eq!(m.meta_string(), "/B/hello:1");
+    }
+}
+
+#[cfg(test)]
+mod verify_test {
+    use super::*;
+
+    #[test]
+    fn not_a_state_meta() {
+        let meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
+        let mut set: HashSet<String> = HashSet::new();
+        let rtn = meta.verify_state(&set);
+        assert_eq!(rtn, Err(NatureError::VerifyError("[/B/hello:1] is not a state meta".to_string())))
+    }
+
+    #[test]
+    fn none_states() {
+        let mut meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
+        let setting = serde_json::to_string(&MetaSetting {
+            is_state: true,
+            is_empty_content: false,
+        }).unwrap();
+        meta.set_setting(&setting);
+        let mut set: HashSet<String> = HashSet::new();
+        set.insert("a".to_string());
+        let rtn = meta.verify_state(&set);
+        assert_eq!(rtn, Err(NatureError::VerifyError("[a] does not defined in meta: /B/hello:1".to_string())))
+    }
+
+    #[test]
+    fn simple() {
+        let mut meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
+        match State::string_to_states("a") {
+            Ok((ss, _)) => meta.set_states(Some(ss)),
+            _ => { panic!("should have some") }
+        };
+        let mut set: HashSet<String> = HashSet::new();
+        set.insert("a".to_string());
+        let rtn = meta.verify_state(&set);
+        assert_eq!(rtn, Ok(()))
+    }
+
+    #[test]
+    fn pure_parent() {
+        let mut meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
+        match State::string_to_states("a1,a2,p1[a3,p2[p3[a,b,c]]]") {
+            Ok((ss, _)) => meta.set_states(Some(ss)),
+            _ => { panic!("should have some") }
+        };
+        dbg!(&meta);
+        let mut set: HashSet<String> = HashSet::new();
+        set.insert("d".to_string());
+        let rtn = meta.verify_state(&set);
+        assert_eq!(rtn.is_err(), true);
+        set.clear();
+        set.insert("b".to_string());
+        let rtn = meta.verify_state(&set);
+        assert_eq!(rtn.is_ok(), true);
+    }
+
+    #[test]
+    fn simple_mutex() {
+        let mut meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
+        match State::string_to_states("a|b") {
+            Ok((ss, _)) => meta.set_states(Some(ss)),
+            _ => { panic!("should have some") }
+        };
+        let mut set: HashSet<String> = HashSet::new();
+        set.insert("b".to_string());
+        let rtn = meta.verify_state(&set);
+        assert_eq!(rtn.is_ok(), true);
+        set.insert("a".to_string());
+        let rtn = meta.verify_state(&set);
+        assert_eq!(rtn.err().unwrap().to_string().contains("mutex conflict"), true);
+    }
+
+    #[test]
+    fn parent_in_mutex() {
+        let mut meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
+        match State::string_to_states("a|b[c|d,e]]") {
+            Ok((ss, _)) => meta.set_states(Some(ss)),
+            _ => { panic!("should have some") }
+        };
+        let mut set: HashSet<String> = HashSet::new();
+        set.insert("a".to_string());
+        let rtn = meta.verify_state(&set);
+        assert_eq!(rtn.is_ok(), true);
+
+        set.insert("c".to_string());
+        let rtn = meta.verify_state(&set);
+        assert_eq!(rtn.err().unwrap().to_string().contains("mutex conflict"), true);
+
+        set.clear();
+        set.insert("a".to_string());
+        set.insert("d".to_string());
+        let rtn = meta.verify_state(&set);
+        assert_eq!(rtn.err().unwrap().to_string().contains("mutex conflict"), true);
+
+        set.clear();
+        set.insert("c".to_string());
+        let rtn = meta.verify_state(&set);
+        assert_eq!(rtn.is_ok(), true);
+
+        set.insert("d".to_string());
+        let rtn = meta.verify_state(&set);
+        assert_eq!(rtn.err().unwrap().to_string().contains("mutex conflict"), true);
+
+        set.clear();
+        set.insert("c".to_string());
+        set.insert("e".to_string());
+        let rtn = meta.verify_state(&set);
+        assert_eq!(rtn.is_ok(), true);
     }
 }
