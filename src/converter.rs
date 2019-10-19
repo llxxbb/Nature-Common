@@ -19,8 +19,6 @@ pub enum ConverterReturned {
     Instances(Vec<Instance>),
     /// return `SelfRouteInstance`
     SelfRoute(Vec<SelfRouteInstance>),
-    /// return mixed result
-    Mixed((Vec<Instance>, Vec<SelfRouteInstance>)),
 }
 
 #[derive(Serialize, Deserialize)]

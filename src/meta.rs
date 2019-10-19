@@ -347,7 +347,7 @@ mod test {
     fn has_state_name_test() {
         let mut m = Meta::new("hello", 1, MetaType::Business).unwrap();
         assert_eq!(m.has_state_name("a"), false);
-        m.set_states(Some(vec![State::Normal("a".to_string())]));
+        let _ = m.set_states(Some(vec![State::Normal("a".to_string())]));
         assert_eq!(m.has_state_name("a"), true);
         assert_eq!(m.has_state_name("b"), false);
     }
@@ -366,7 +366,7 @@ mod verify_test {
     #[test]
     fn not_a_state_meta() {
         let meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
-        let mut set: HashSet<String> = HashSet::new();
+        let set: HashSet<String> = HashSet::new();
         let rtn = meta.verify_state(&set);
         assert_eq!(rtn, Err(NatureError::VerifyError("[/B/hello:1] is not a state meta".to_string())))
     }
@@ -378,7 +378,7 @@ mod verify_test {
             is_state: true,
             is_empty_content: false,
         }).unwrap();
-        meta.set_setting(&setting);
+        let _ = meta.set_setting(&setting);
         let mut set: HashSet<String> = HashSet::new();
         set.insert("a".to_string());
         let rtn = meta.verify_state(&set);
@@ -388,7 +388,7 @@ mod verify_test {
     #[test]
     fn simple() {
         let mut meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
-        match State::string_to_states("a") {
+        let _ = match State::string_to_states("a") {
             Ok((ss, _)) => meta.set_states(Some(ss)),
             _ => { panic!("should have some") }
         };
@@ -401,7 +401,7 @@ mod verify_test {
     #[test]
     fn pure_parent() {
         let mut meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
-        match State::string_to_states("a1,a2,p1[a3,p2[p3[a,b,c]]]") {
+        let _ = match State::string_to_states("a1,a2,p1[a3,p2[p3[a,b,c]]]") {
             Ok((ss, _)) => meta.set_states(Some(ss)),
             _ => { panic!("should have some") }
         };
@@ -419,7 +419,7 @@ mod verify_test {
     #[test]
     fn simple_mutex() {
         let mut meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
-        match State::string_to_states("a|b") {
+        let _ = match State::string_to_states("a|b") {
             Ok((ss, _)) => meta.set_states(Some(ss)),
             _ => { panic!("should have some") }
         };
@@ -435,7 +435,7 @@ mod verify_test {
     #[test]
     fn parent_in_mutex() {
         let mut meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
-        match State::string_to_states("a|b[c|d,e]]") {
+        let _ = match State::string_to_states("a|b[c|d,e]]") {
             Ok((ss, _)) => meta.set_states(Some(ss)),
             _ => { panic!("should have some") }
         };

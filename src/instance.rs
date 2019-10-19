@@ -2,14 +2,18 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::iter::Iterator;
 use std::ops::{Deref, DerefMut};
+use std::str::FromStr;
 
 use chrono::prelude::*;
 
-use crate::{generate_id, NatureError, Result, TargetState};
+use crate::{generate_id, NatureError, ParaForQueryByID, Result, TargetState};
 use crate::converter::DynamicConverter;
 use crate::meta_type::MetaType;
 
 use super::Meta;
+
+// sys context define
+pub static CONTEXT_TARGET_INSTANCE_ID: &str = "sys.target";
 
 /// A snapshot for a particular `Meta`
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
@@ -90,6 +94,19 @@ impl Instance {
         match option {
             Some(_) => Err(NatureError::VerifyError("instances's meta must be same!".to_string())),
             None => Ok(())
+        }
+    }
+
+    pub fn get_last_taget<DAO>(&self, target_meta: &str, dao: DAO) -> Result<Option<Instance>>
+        where DAO: Fn(&ParaForQueryByID) -> Result<Option<Instance>>
+    {
+        match self.context.get(&*CONTEXT_TARGET_INSTANCE_ID) {
+            // context have target id
+            Some(state_id) => {
+                let state_id = u128::from_str(state_id)?;
+                dao(&ParaForQueryByID { id: state_id, meta: target_meta.to_string() })
+            }
+            None => Ok(None),
         }
     }
 }
