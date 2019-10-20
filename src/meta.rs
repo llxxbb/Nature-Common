@@ -405,7 +405,6 @@ mod verify_test {
             Ok((ss, _)) => meta.set_states(Some(ss)),
             _ => { panic!("should have some") }
         };
-        dbg!(&meta);
         let mut set: HashSet<String> = HashSet::new();
         set.insert("d".to_string());
         let rtn = meta.verify_state(&set);

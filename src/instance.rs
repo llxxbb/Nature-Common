@@ -176,6 +176,12 @@ pub struct FromInstance {
     pub state_version: i32,
 }
 
+impl FromInstance {
+    pub fn get_upstream(&self) -> String {
+        format!("{}:{}:{}", self.meta, self.id, self.state_version)
+    }
+}
+
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct SelfRouteInstance {
