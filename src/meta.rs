@@ -226,6 +226,55 @@ impl Meta {
         }
         Ok(())
     }
+    /// return.0 remained return.1 mutex pairs.
+    pub fn check_state(&self, input: &Vec<String>) -> Result<(Vec<String>, Vec<(String, String)>)> {
+        if !self.is_state {
+            return Err(VerifyError(format!("[{}] is not a state meta", self.meta_string())));
+        }
+        let mut map: HashMap<u16, (u16, String)> = HashMap::new();
+        let mut remained: HashSet<String> = HashSet::new();
+        let mut mutex_pairs: Vec<(String, String)> = vec![];
+        for one in input {
+            let option = self.check_list.get(one);
+            // undefined
+            if option.is_none() {
+                let msg = format!("[{}] does not defined in meta: {}", one, self.meta_string());
+                warn!("{}", &msg);
+                return Err(NatureError::VerifyError(msg));
+            }
+            // not mutex
+            let path = option.unwrap();
+            if !path.is_mutex {
+                remained.insert(one.clone());
+                continue;
+            }
+            // mutex
+            let mut last: u16 = 0;
+            for op in &path.desc_seq {
+                match op {
+                    CheckType::Normal(id) => { last = *id; }
+                    CheckType::Parent(id) => { last = *id; }
+                    CheckType::Mutex(id) => {
+                        let cached_p = map.get(id);
+                        if let Some((e, old)) = cached_p {
+                            if *e != last {
+                                mutex_pairs.push((one.clone(), old.clone()));
+                                remained.remove(old);
+                                map.insert(*id, (last, one.clone()));
+                            }
+                            remained.insert(one.clone());
+                        } else {
+                            map.insert(*id, (last, one.clone()));
+                            remained.insert(one.clone());
+                            last = *id;
+                        }
+                    }
+                }
+            }
+        }
+        let remained: Vec<String> = remained.into_iter().collect();
+        Ok((remained, mutex_pairs))
+    }
 
     pub fn get_states(&self) -> Option<States> {
         self.state.clone()
@@ -362,8 +411,7 @@ mod verify_test {
     #[test]
     fn not_a_state_meta() {
         let meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
-        let set: HashSet<String> = HashSet::new();
-        let rtn = meta.verify_state(&set);
+        let rtn = meta.check_state(&vec![]);
         assert_eq!(rtn, Err(NatureError::VerifyError("[/B/hello:1] is not a state meta".to_string())))
     }
 
@@ -375,9 +423,8 @@ mod verify_test {
             is_empty_content: false,
         }).unwrap();
         let _ = meta.set_setting(&setting);
-        let mut set: HashSet<String> = HashSet::new();
-        set.insert("a".to_string());
-        let rtn = meta.verify_state(&set);
+        let set: Vec<String> = vec!["a".to_string()];
+        let rtn = meta.check_state(&set);
         assert_eq!(rtn, Err(NatureError::VerifyError("[a] does not defined in meta: /B/hello:1".to_string())))
     }
 
@@ -388,10 +435,9 @@ mod verify_test {
             Ok((ss, _)) => meta.set_states(Some(ss)),
             _ => { panic!("should have some") }
         };
-        let mut set: HashSet<String> = HashSet::new();
-        set.insert("a".to_string());
-        let rtn = meta.verify_state(&set);
-        assert_eq!(rtn, Ok(()))
+        let set: Vec<String> = vec!["a".to_string()];
+        let rtn = meta.check_state(&set);
+        assert_eq!(rtn, Ok((vec!["a".to_string()], vec![])))
     }
 
     #[test]
@@ -401,14 +447,12 @@ mod verify_test {
             Ok((ss, _)) => meta.set_states(Some(ss)),
             _ => { panic!("should have some") }
         };
-        let mut set: HashSet<String> = HashSet::new();
-        set.insert("d".to_string());
-        let rtn = meta.verify_state(&set);
+        let set = vec!["d".to_string()];
+        let rtn = meta.check_state(&set);
         assert_eq!(rtn.is_err(), true);
-        set.clear();
-        set.insert("b".to_string());
-        let rtn = meta.verify_state(&set);
-        assert_eq!(rtn.is_ok(), true);
+        let set = vec!["b".to_string()];
+        let rtn = meta.check_state(&set);
+        assert_eq!(rtn, Ok((vec!["b".to_string()], vec![])));
     }
 
     #[test]
@@ -418,13 +462,12 @@ mod verify_test {
             Ok((ss, _)) => meta.set_states(Some(ss)),
             _ => { panic!("should have some") }
         };
-        let mut set: HashSet<String> = HashSet::new();
-        set.insert("b".to_string());
-        let rtn = meta.verify_state(&set);
-        assert_eq!(rtn.is_ok(), true);
-        set.insert("a".to_string());
-        let rtn = meta.verify_state(&set);
-        assert_eq!(rtn.err().unwrap().to_string().contains("mutex conflict"), true);
+        let set = vec!["b".to_string()];
+        let rtn = meta.check_state(&set);
+        assert_eq!(rtn, Ok((vec!["b".to_string()], vec![])));
+        let set = vec!["b".to_string(), "a".to_string()];
+        let rtn = meta.check_state(&set);
+        assert_eq!(rtn, Ok((vec!["a".to_string()], vec![("a".to_string(), "b".to_string())])));
     }
 
     #[test]
@@ -434,34 +477,28 @@ mod verify_test {
             Ok((ss, _)) => meta.set_states(Some(ss)),
             _ => { panic!("should have some") }
         };
-        let mut set: HashSet<String> = HashSet::new();
-        set.insert("a".to_string());
-        let rtn = meta.verify_state(&set);
-        assert_eq!(rtn.is_ok(), true);
+        let set = vec!["a".to_string()];
+        let rtn = meta.check_state(&set);
+        assert_eq!(rtn, Ok((vec!["a".to_string()], vec![])));
 
-        set.insert("c".to_string());
-        let rtn = meta.verify_state(&set);
-        assert_eq!(rtn.err().unwrap().to_string().contains("mutex conflict"), true);
+        let set = vec!["a".to_string(), "c".to_string()];
+        let rtn = meta.check_state(&set);
+        assert_eq!(rtn, Ok((vec!["c".to_string()], vec![("c".to_string(), "a".to_string())])));
 
-        set.clear();
-        set.insert("a".to_string());
-        set.insert("d".to_string());
-        let rtn = meta.verify_state(&set);
-        assert_eq!(rtn.err().unwrap().to_string().contains("mutex conflict"), true);
+        let set = vec!["a".to_string(), "d".to_string()];
+        let rtn = meta.check_state(&set);
+        assert_eq!(rtn, Ok((vec!["d".to_string()], vec![("d".to_string(), "a".to_string())])));
 
-        set.clear();
-        set.insert("c".to_string());
-        let rtn = meta.verify_state(&set);
-        assert_eq!(rtn.is_ok(), true);
+        let set = vec!["c".to_string()];
+        let rtn = meta.check_state(&set);
+        assert_eq!(rtn, Ok((vec!["c".to_string()], vec![])));
 
-        set.insert("d".to_string());
-        let rtn = meta.verify_state(&set);
-        assert_eq!(rtn.err().unwrap().to_string().contains("mutex conflict"), true);
+        let set = vec!["c".to_string(), "d".to_string()];
+        let rtn = meta.check_state(&set);
+        assert_eq!(rtn, Ok((vec!["d".to_string()], vec![("d".to_string(), "c".to_string())])));
 
-        set.clear();
-        set.insert("c".to_string());
-        set.insert("e".to_string());
-        let rtn = meta.verify_state(&set);
-        assert_eq!(rtn.is_ok(), true);
+        let set = vec!["c".to_string(), "e".to_string()];
+        let rtn = meta.check_state(&set);
+        assert_eq!(rtn, Ok((vec!["c".to_string(), "e".to_string()], vec![])));
     }
 }
