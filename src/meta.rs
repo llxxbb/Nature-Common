@@ -110,10 +110,6 @@ impl Meta {
         self.full_key = meta_type.get_prefix() + &self.key.clone();
     }
 
-    pub fn get_string(&self) -> String {
-        self.full_key.clone() + META_AND_VERSION_SEPARATOR + &self.version.to_string()
-    }
-
     /// `full_key`'s format : /[biz type]/[biz key]
     pub fn from_full_key(full_key: &str, version: i32) -> Result<Meta> {
         let err_msg = "illegal format for `full_key` : ".to_string() + full_key.clone();
@@ -147,13 +143,13 @@ impl Meta {
     }
 
     pub fn meta_string(&self) -> String {
-        format!("{}:{}", self.full_key, self.version)
+        self.full_key.clone() + META_AND_VERSION_SEPARATOR + &self.version.to_string()
     }
 
     pub fn set_states(&mut self, states: Option<States>) -> Result<()> {
         match states {
             Some(ss) => {
-                Self::avoid_same_name(&ss, &self.get_string())?;
+                Self::avoid_same_name(&ss, &self.meta_string())?;
                 self.init_check_list(&ss, 0, &mut Default::default());
                 self.state = Some(ss);
                 self.is_state = true;
@@ -190,7 +186,7 @@ impl Meta {
 
     pub fn verify_state(&self, input: &HashSet<String>) -> Result<()> {
         if !self.is_state {
-            return Err(VerifyError(format!("[{}] is not a state meta", self.get_string())));
+            return Err(VerifyError(format!("[{}] is not a state meta", self.meta_string())));
         }
         let mut map: HashMap<u16, u16> = HashMap::new();
         for one in input {
