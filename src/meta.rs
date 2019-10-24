@@ -184,48 +184,6 @@ impl Meta {
         })
     }
 
-    pub fn verify_state(&self, input: &HashSet<String>) -> Result<()> {
-        if !self.is_state {
-            return Err(VerifyError(format!("[{}] is not a state meta", self.meta_string())));
-        }
-        let mut map: HashMap<u16, u16> = HashMap::new();
-        for one in input {
-            let option = self.check_list.get(one);
-            // undefined
-            if option.is_none() {
-                let msg = format!("[{}] does not defined in meta: {}", one, self.meta_string());
-                warn!("{}", &msg);
-                return Err(NatureError::VerifyError(msg));
-            }
-            // not mutex
-            let path = option.unwrap();
-            if !path.is_mutex {
-                continue;
-            }
-            // mutex
-            let mut last: u16 = 0;
-            for op in &path.desc_seq {
-                match op {
-                    CheckType::Normal(id) => { last = *id; }
-                    CheckType::Parent(id) => { last = *id; }
-                    CheckType::Mutex(id) => {
-                        let cached_p = map.get(id);
-                        if let Some(e) = cached_p {
-                            if *e != last {
-                                let msg = format!("[{}] mutex conflict for meta: {}", one, self.meta_string());
-                                warn!("{}", &msg);
-                                return Err(NatureError::VerifyError(msg));
-                            }
-                        } else {
-                            map.insert(*id, last);
-                            last = *id;
-                        }
-                    }
-                }
-            }
-        }
-        Ok(())
-    }
     /// return.0 remained return.1 mutex pairs.
     pub fn check_state(&self, input: &Vec<String>) -> Result<(Vec<String>, Vec<(String, String)>)> {
         if !self.is_state {
