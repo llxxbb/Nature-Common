@@ -270,8 +270,8 @@ impl Meta {
             if setting.is_state {
                 self.is_state = true;
             }
-            if setting.belong_to.is_some() && !self.is_state {
-                return Err(NatureError::VerifyError("[belong_to] is only useful for state-meta".to_string()));
+            if setting.master.is_some() && !self.is_state {
+                return Err(NatureError::VerifyError("[master] is only useful for state-meta".to_string()));
             }
             self.setting = Some(setting);
         } else {
@@ -378,16 +378,15 @@ mod test {
     }
 
     #[test]
-    fn belong_to_must_be_a_state_meta() {
+    fn master_must_be_a_state_meta() {
         // error
         let mut m = Meta::new("hello", 1, MetaType::Business).unwrap();
         let setting = serde_json::to_string(&MetaSetting {
             is_state: false,
-            is_empty_content: false,
-            belong_to: Some("hello2".to_string()),
+            master: Some("hello2".to_string()),
         }).unwrap();
         let rtn = m.set_setting(&setting);
-        assert_eq!(rtn, Err(NatureError::VerifyError("[belong_to] is only useful for state-meta".to_string())));
+        assert_eq!(rtn, Err(NatureError::VerifyError("[master] is only useful for state-meta".to_string())));
         // ok
         let _ = m.set_states(Some(vec![State::Normal("a".to_string())]));
         let rtn = m.set_setting(&setting);
@@ -396,8 +395,7 @@ mod test {
         let _ = m.set_states(None);
         let setting = serde_json::to_string(&MetaSetting {
             is_state: true,
-            is_empty_content: false,
-            belong_to: Some("hello2".to_string()),
+            master: Some("hello2".to_string()),
         }).unwrap();
         let rtn = m.set_setting(&setting);
         assert_eq!(rtn, Ok(()));
@@ -420,8 +418,7 @@ mod verify_test {
         let mut meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
         let setting = serde_json::to_string(&MetaSetting {
             is_state: true,
-            is_empty_content: false,
-            belong_to: None,
+            master: None,
         }).unwrap();
         let _ = meta.set_setting(&setting);
         let set: Vec<String> = vec!["a".to_string()];
