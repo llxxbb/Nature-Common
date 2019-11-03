@@ -109,6 +109,18 @@ impl Instance {
             None => Ok(None),
         }
     }
+
+    pub fn get_master<ID>(&self, self_meta: &Meta, dao: ID) -> Result<Option<Instance>>
+        where ID: Fn(&ParaForQueryByID) -> Result<Option<Instance>>
+    {
+        match self_meta.get_setting() {
+            None => Ok(None),
+            Some(setting) => match setting.master {
+                None => Ok(None),
+                Some(master) => Ok(dao(&ParaForQueryByID::new(self.id, &master))?)
+            },
+        }
+    }
 }
 
 

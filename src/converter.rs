@@ -27,6 +27,7 @@ pub struct ConverterParameter {
     pub last_state: Option<Instance>,
     /// This is used for callback
     pub carrier_id: Vec<u8>,
+    pub master: Option<Instance>,
 }
 
 pub trait ConverterTrait {
