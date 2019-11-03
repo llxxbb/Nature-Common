@@ -13,7 +13,7 @@ pub enum ConverterReturned {
     EnvError,
     /// No instance would be return.
     None,
-    /// Tell `Nature` the task will be processed asynchronously, and it will callback to `Nature` later will result are ready.
+    /// Tell `Nature` the task will be processed asynchronously, Nature will wait for seconds you assigned, and converter will callback to `Nature` later while result are ready.
     Delay(u32),
     /// return instances
     Instances(Vec<Instance>),
