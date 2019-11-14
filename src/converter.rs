@@ -5,7 +5,7 @@ use crate::error::NatureError;
 
 use super::Instance;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum ConverterReturned {
     /// This will break process for ever.
     LogicalError(String),
@@ -19,6 +19,12 @@ pub enum ConverterReturned {
     Instances(Vec<Instance>),
     /// return `SelfRouteInstance`
     SelfRoute(Vec<SelfRouteInstance>),
+}
+
+impl Default for ConverterReturned {
+    fn default() -> Self {
+        ConverterReturned::None
+    }
 }
 
 #[derive(Serialize, Deserialize)]
