@@ -6,6 +6,7 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate uuid;
 
+pub use callback::*;
 pub use converter::*;
 pub use error::*;
 pub use fetch_condition::*;
@@ -34,5 +35,6 @@ mod state;
 mod fetch_condition;
 mod query;
 mod target_state;
+mod callback;
 
 pub type Result<T> = std::result::Result<T, NatureError>;
