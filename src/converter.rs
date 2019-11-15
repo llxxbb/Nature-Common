@@ -52,6 +52,7 @@ pub struct DynamicConverter {
 
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Ord, PartialOrd, Eq, Hash)]
+#[serde(rename_all = "camelCase")]
 pub enum Protocol {
     LocalRust,
     Http,
