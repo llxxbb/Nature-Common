@@ -42,6 +42,7 @@ impl Instance {
                 states: HashSet::new(),
                 state_version: 0,
                 from: None,
+                para: String::new(),
             },
             execute_time: 0,
             create_time: 0,
@@ -61,6 +62,7 @@ impl Instance {
                 states: HashSet::new(),
                 state_version: 0,
                 from: None,
+                para: String::new(),
             },
             execute_time: 0,
             create_time: 0,
@@ -80,8 +82,11 @@ impl Instance {
         if self.execute_time == 0 {
             self.execute_time = now;
         }
-        if self.id == 0 {
-            self.id = generate_id(&self.data)?;
+        match self.para.is_empty() {
+            true => if self.id == 0 {
+                self.id = generate_id(&self.data)?;
+            }
+            _ => self.id = 0
         }
         Ok(self)
     }
@@ -166,6 +171,7 @@ pub struct BizObject {
     pub states: HashSet<String>,
     pub state_version: i32,
     pub from: Option<FromInstance>,
+    pub para: String,
 }
 
 impl BizObject {
