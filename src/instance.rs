@@ -6,7 +6,7 @@ use std::str::FromStr;
 
 use chrono::prelude::*;
 
-use crate::{generate_id, NatureError, ParaForQueryByID, Result, TargetState};
+use crate::{generate_id, NatureError, ParaForQueryByID, Result, TargetState, FromInstance};
 use crate::converter::DynamicConverter;
 use crate::meta_type::MetaType;
 
@@ -192,18 +192,6 @@ impl BizObject {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
-pub struct FromInstance {
-    pub id: u128,
-    pub meta: String,
-    pub state_version: i32,
-}
-
-impl FromInstance {
-    pub fn get_upstream(&self) -> String {
-        format!("{}:{}:{}", self.meta, self.id, self.state_version)
-    }
-}
 
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
