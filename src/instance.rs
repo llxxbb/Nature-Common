@@ -8,7 +8,6 @@ use chrono::prelude::*;
 
 use crate::{generate_id, NatureError, ParaForQueryByID, Result, TargetState, FromInstance};
 use crate::converter::DynamicConverter;
-use crate::meta_type::MetaType;
 
 use super::Meta;
 
@@ -37,26 +36,6 @@ impl Instance {
             id: 0,
             data: BizObject {
                 meta: format!("/B{}:1", key),
-                content: "".to_string(),
-                context: HashMap::new(),
-                states: HashSet::new(),
-                state_version: 0,
-                from: None,
-                para: String::new(),
-            },
-            execute_time: 0,
-            create_time: 0,
-        })
-    }
-
-    pub fn new_with_type(key: &str, meta: MetaType) -> Result<Self> {
-        if key.is_empty() {
-            return Err(NatureError::VerifyError("key can not be empty".to_string()));
-        }
-        Ok(Instance {
-            id: 0,
-            data: BizObject {
-                meta: format!("{}/{}:1", meta.get_prefix(), key),
                 content: "".to_string(),
                 context: HashMap::new(),
                 states: HashSet::new(),
@@ -228,7 +207,7 @@ mod test {
         assert_eq!(instance.execute_time, 0);
         assert_eq!(instance.create_time, 0);
         let _ = instance.check_and_revise(meta_cache, meta_getter);
-        assert_eq!(instance.id, 326682805267673639322142205040419066191);
+        assert_eq!(instance.id, 61240780657743859318321580345734237010);
         assert_eq!(instance.execute_time > 0, true);
         assert_eq!(instance.create_time > 0, true);
     }

@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::{Result, SelfRouteInstance};
+use crate::{is_zero, Result, SelfRouteInstance};
 use crate::error::NatureError;
 
 use super::Instance;
@@ -48,6 +48,9 @@ pub struct DynamicConverter {
     pub fun: Executor,
     /// use upstream's id as downstream's id.
     pub use_upstream_id: bool,
+    #[serde(skip_serializing_if = "is_zero")]
+    #[serde(default)]
+    pub delay: i32,
 }
 
 
@@ -141,12 +144,12 @@ mod test {
             proportion: 1,
         };
         let ewe_s = serde_json::to_string(&exe).unwrap();
-        assert_eq!(ewe_s, "{\"protocol\":\"LocalRust\"}");
+        assert_eq!(ewe_s, "{\"protocol\":\"localRust\"}");
         let ewe_dw: Executor = serde_json::from_str(&ewe_s).unwrap();
         assert_eq!(ewe_dw, exe);
         exe.proportion = 5;
         let ewe_s = serde_json::to_string(&exe).unwrap();
-        assert_eq!(ewe_s, "{\"protocol\":\"LocalRust\",\"proportion\":5}");
+        assert_eq!(ewe_s, "{\"protocol\":\"localRust\",\"proportion\":5}");
         let ewe_dw: Executor = serde_json::from_str(&ewe_s).unwrap();
         assert_eq!(exe, ewe_dw);
     }

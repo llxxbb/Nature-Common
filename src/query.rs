@@ -1,3 +1,5 @@
+use crate::{is_one, is_zero, one};
+
 /// used for query instance by id
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ParaForQueryByID {
@@ -10,22 +12,6 @@ pub struct ParaForQueryByID {
     #[serde(default = "one")]
     pub limit: i32,
 }
-
-
-/// This is only used for serialize
-#[allow(clippy::trivially_copy_pass_by_ref)]
-fn is_one(num: &i32) -> bool {
-    *num == 1
-}
-
-fn one() -> i32 { 1 }
-
-/// This is only used for serialize
-#[allow(clippy::trivially_copy_pass_by_ref)]
-fn is_zero(num: &i32) -> bool {
-    *num == 0
-}
-
 
 impl ParaForQueryByID {
     pub fn new(id: u128, meta: &str) -> Self {

@@ -38,7 +38,7 @@ impl MetaType {
             return err;
         }
         let x = &meta[0..2];
-        if x != format!("{}/", &prefix) {
+        if x != format!("{}", &prefix) {
             return err;
         }
         Ok(())
@@ -64,5 +64,10 @@ mod test {
         assert_eq!(MetaType::System, MetaType::from_prefix("/S").unwrap());
         assert_eq!(MetaType::Dynamic, MetaType::from_prefix("/D").unwrap());
         assert_eq!(Err(NatureError::VerifyError("unknow prefix : [/d]".to_string())), MetaType::from_prefix("/d"));
+    }
+
+    #[test]
+    fn check_type_test(){
+        assert_eq!(Ok(()), MetaType::check_type("/D//dynamic/target/is/null:1", MetaType::Dynamic));
     }
 }
