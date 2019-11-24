@@ -6,9 +6,8 @@ use std::str::FromStr;
 
 use chrono::prelude::*;
 
-use crate::{generate_id, NatureError, ParaForQueryByID, Result, TargetState};
+use crate::{generate_id, NatureError, ParaForQueryByID, Result, TargetState, FromInstance};
 use crate::converter::DynamicConverter;
-use crate::meta_type::MetaType;
 
 use super::Meta;
 
@@ -42,25 +41,7 @@ impl Instance {
                 states: HashSet::new(),
                 state_version: 0,
                 from: None,
-            },
-            execute_time: 0,
-            create_time: 0,
-        })
-    }
-
-    pub fn new_with_type(key: &str, meta: MetaType) -> Result<Self> {
-        if key.is_empty() {
-            return Err(NatureError::VerifyError("key can not be empty".to_string()));
-        }
-        Ok(Instance {
-            id: 0,
-            data: BizObject {
-                meta: format!("{}/{}:1", meta.get_prefix(), key),
-                content: "".to_string(),
-                context: HashMap::new(),
-                states: HashSet::new(),
-                state_version: 0,
-                from: None,
+                para: String::new(),
             },
             execute_time: 0,
             create_time: 0,
@@ -80,8 +61,11 @@ impl Instance {
         if self.execute_time == 0 {
             self.execute_time = now;
         }
-        if self.id == 0 {
-            self.id = generate_id(&self.data)?;
+        match self.para.is_empty() {
+            true => if self.id == 0 {
+                self.id = generate_id(&self.data)?;
+            }
+            _ => self.id = 0
         }
         Ok(self)
     }
@@ -107,6 +91,18 @@ impl Instance {
                 dao(&ParaForQueryByID::new(state_id, &target_meta))
             }
             None => Ok(None),
+        }
+    }
+
+    pub fn get_master<ID>(&self, self_meta: &Meta, dao: ID) -> Result<Option<Instance>>
+        where ID: Fn(&ParaForQueryByID) -> Result<Option<Instance>>
+    {
+        match self_meta.get_setting() {
+            None => Ok(None),
+            Some(setting) => match setting.master {
+                None => Ok(None),
+                Some(master) => Ok(dao(&ParaForQueryByID::new(self.id, &master))?)
+            },
         }
     }
 }
@@ -154,6 +150,7 @@ pub struct BizObject {
     pub states: HashSet<String>,
     pub state_version: i32,
     pub from: Option<FromInstance>,
+    pub para: String,
 }
 
 impl BizObject {
@@ -174,18 +171,6 @@ impl BizObject {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
-pub struct FromInstance {
-    pub id: u128,
-    pub meta: String,
-    pub state_version: i32,
-}
-
-impl FromInstance {
-    pub fn get_upstream(&self) -> String {
-        format!("{}:{}:{}", self.meta, self.id, self.state_version)
-    }
-}
 
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
@@ -222,7 +207,7 @@ mod test {
         assert_eq!(instance.execute_time, 0);
         assert_eq!(instance.create_time, 0);
         let _ = instance.check_and_revise(meta_cache, meta_getter);
-        assert_eq!(instance.id, 326682805267673639322142205040419066191);
+        assert_eq!(instance.id, 61240780657743859318321580345734237010);
         assert_eq!(instance.execute_time > 0, true);
         assert_eq!(instance.create_time > 0, true);
     }

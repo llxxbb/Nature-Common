@@ -154,7 +154,19 @@ impl Meta {
                 self.state = Some(ss);
                 self.is_state = true;
             }
-            _ => self.state = None
+            _ => {
+                match &self.setting {
+                    None => { self.is_state = false; }
+                    Some(s) => {
+                        if s.is_state {
+                            self.is_state = true;
+                        } else {
+                            self.is_state = false;
+                        }
+                    }
+                }
+                self.state = None
+            }
         }
         Ok(())
     }
@@ -251,11 +263,15 @@ impl Meta {
         Ok(())
     }
 
+    /// before call this to make sure states had initialized.
     pub fn set_setting(&mut self, settings: &str) -> Result<()> {
         if !settings.is_empty() {
             let setting: MetaSetting = serde_json::from_str(settings)?;
             if setting.is_state {
                 self.is_state = true;
+            }
+            if setting.master.is_some() && !self.is_state {
+                return Err(NatureError::VerifyError("[master] is only useful for state-meta".to_string()));
             }
             self.setting = Some(setting);
         } else {
@@ -360,6 +376,30 @@ mod test {
         let m = Meta::new("hello", 1, MetaType::Business).unwrap();
         assert_eq!(m.meta_string(), "/B/hello:1");
     }
+
+    #[test]
+    fn master_must_be_a_state_meta() {
+        // error
+        let mut m = Meta::new("hello", 1, MetaType::Business).unwrap();
+        let setting = serde_json::to_string(&MetaSetting {
+            is_state: false,
+            master: Some("hello2".to_string()),
+        }).unwrap();
+        let rtn = m.set_setting(&setting);
+        assert_eq!(rtn, Err(NatureError::VerifyError("[master] is only useful for state-meta".to_string())));
+        // ok
+        let _ = m.set_states(Some(vec![State::Normal("a".to_string())]));
+        let rtn = m.set_setting(&setting);
+        assert_eq!(rtn, Ok(()));
+        // ok
+        let _ = m.set_states(None);
+        let setting = serde_json::to_string(&MetaSetting {
+            is_state: true,
+            master: Some("hello2".to_string()),
+        }).unwrap();
+        let rtn = m.set_setting(&setting);
+        assert_eq!(rtn, Ok(()));
+    }
 }
 
 #[cfg(test)]
@@ -378,7 +418,7 @@ mod verify_test {
         let mut meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
         let setting = serde_json::to_string(&MetaSetting {
             is_state: true,
-            is_empty_content: false,
+            master: None,
         }).unwrap();
         let _ = meta.set_setting(&setting);
         let set: Vec<String> = vec!["a".to_string()];
