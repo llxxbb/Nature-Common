@@ -36,9 +36,7 @@ pub struct ConverterParameter {
     pub master: Option<Instance>,
 }
 
-pub trait ConverterTrait {
-    fn convert(para: ConverterParameter) -> ConverterReturned;
-}
+pub type Convert = fn(ConverterParameter) -> ConverterReturned;
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct DynamicConverter {
