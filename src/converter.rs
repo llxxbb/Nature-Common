@@ -30,10 +30,18 @@ impl Default for ConverterReturned {
 #[derive(Serialize, Deserialize)]
 pub struct ConverterParameter {
     pub from: Instance,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub last_state: Option<Instance>,
     /// This is used for callback
     pub task_id: Vec<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub master: Option<Instance>,
+    /// settings which used by converter for dynamic behaviour
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub cfg: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
