@@ -6,7 +6,7 @@ use std::str::FromStr;
 
 use chrono::prelude::*;
 
-use crate::{generate_id, NatureError, ParaForQueryByID, Result, TargetState, FromInstance};
+use crate::{FromInstance, generate_id, NatureError, ParaForQueryByID, Result, TargetState};
 use crate::converter::DynamicConverter;
 
 use super::Meta;
@@ -172,8 +172,7 @@ impl BizObject {
 }
 
 
-
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
 pub struct SelfRouteInstance {
     pub instance: Instance,
     pub converter: Vec<DynamicConverter>,

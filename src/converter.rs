@@ -5,7 +5,7 @@ use crate::error::NatureError;
 
 use super::Instance;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum ConverterReturned {
     /// This will break process for ever.
     LogicalError(String),
@@ -36,9 +36,7 @@ pub struct ConverterParameter {
     pub master: Option<Instance>,
 }
 
-pub type Convert = fn(ConverterParameter) -> ConverterReturned;
-
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
 pub struct DynamicConverter {
     /// Only `Dynamic` and `Null` target supported for security reason.
     pub to: Option<String>,
@@ -60,6 +58,7 @@ pub enum Protocol {
     Https,
     /// Nature will automatically implement the converter. it can't be used by user.
     Auto,
+    BuiltIn,
 }
 
 impl FromStr for Protocol {
@@ -71,6 +70,7 @@ impl FromStr for Protocol {
             "LOCALRUST" => Ok(Protocol::LocalRust),
             "HTTP" => Ok(Protocol::Http),
             "HTTPS" => Ok(Protocol::Https),
+            "BUILTIN" => Ok(Protocol::BuiltIn),
             _ => {
                 let msg = format!("unknown protocol : {}", s);
                 Err(NatureError::VerifyError(msg))
