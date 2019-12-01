@@ -384,6 +384,8 @@ mod test {
         let setting = serde_json::to_string(&MetaSetting {
             is_state: false,
             master: Some("hello2".to_string()),
+            multi_meta: None,
+            conflict_avoid: false,
         }).unwrap();
         let rtn = m.set_setting(&setting);
         assert_eq!(rtn, Err(NatureError::VerifyError("[master] is only useful for state-meta".to_string())));
@@ -396,6 +398,8 @@ mod test {
         let setting = serde_json::to_string(&MetaSetting {
             is_state: true,
             master: Some("hello2".to_string()),
+            multi_meta: None,
+            conflict_avoid: false,
         }).unwrap();
         let rtn = m.set_setting(&setting);
         assert_eq!(rtn, Ok(()));
@@ -419,6 +423,8 @@ mod verify_test {
         let setting = serde_json::to_string(&MetaSetting {
             is_state: true,
             master: None,
+            multi_meta: None,
+            conflict_avoid: false,
         }).unwrap();
         let _ = meta.set_setting(&setting);
         let set: Vec<String> = vec!["a".to_string()];
@@ -497,6 +503,9 @@ mod verify_test {
 
         let set = vec!["c".to_string(), "e".to_string()];
         let rtn = meta.check_state(&set);
-        assert_eq!(rtn, Ok((vec!["c".to_string(), "e".to_string()], vec![])));
+        let rtn: Vec<String> = rtn.unwrap().0;
+        assert_eq!(rtn.len(), 2);
+        assert_eq!(rtn.contains(&"c".to_string()), true);
+        assert_eq!(rtn.contains(&"e".to_string()), true);
     }
 }

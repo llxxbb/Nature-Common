@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::{is_zero, Result, SelfRouteInstance};
+use crate::{is_one_u32, is_zero, one_u32, Result, SelfRouteInstance};
 use crate::error::NatureError;
 
 use super::Instance;
@@ -103,8 +103,8 @@ pub struct Executor {
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default)]
     pub group: String,
-    #[serde(skip_serializing_if = "is_one")]
-    #[serde(default = "one")]
+    #[serde(skip_serializing_if = "is_one_u32")]
+    #[serde(default = "one_u32")]
     pub proportion: u32,
 }
 
@@ -127,15 +127,6 @@ impl Executor {
         }
     }
 }
-
-/// This is only used for serialize
-#[allow(clippy::trivially_copy_pass_by_ref)]
-fn is_one(num: &u32) -> bool {
-    *num == 1
-}
-
-fn one() -> u32 { 1 }
-
 
 #[cfg(test)]
 mod test {
