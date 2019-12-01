@@ -36,7 +36,7 @@ pub struct MultiMetaSetting {
 }
 
 impl MultiMetaSetting {
-    pub fn get_mets(&self, parent: &Meta) -> Result<Vec<Meta>> {
+    pub fn get_metas(&self, parent: &Meta) -> Result<Vec<Meta>> {
         let prefix = if self.prefix.is_empty() {
             parent.get_key()
         } else {
@@ -55,6 +55,36 @@ impl MultiMetaSetting {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn get_metas_test() {
+        let parent = Meta::from_full_key("/P/parent", 3).unwrap();
+        let setting = MultiMetaSetting {
+            prefix: "".to_string(),
+            version: 2,
+            keys: vec!["a".to_string(), "b".to_string()],
+            meta_type: Default::default(),
+        };
+        let rtn = setting.get_metas(&parent).unwrap();
+        assert_eq!(rtn.len(), 2);
+        assert_eq!(rtn[0], Meta::from_full_key("/B/parent/a", 2).unwrap());
+        assert_eq!(rtn[1], Meta::from_full_key("/B/parent/b", 2).unwrap());
+    }
+
+    #[test]
+    fn get_metas_with_prefix_test() {
+        let parent = Meta::from_full_key("/P/parent", 3).unwrap();
+        let setting = MultiMetaSetting {
+            prefix: "p".to_string(),
+            version: 2,
+            keys: vec!["a".to_string(), "b".to_string()],
+            meta_type: Default::default(),
+        };
+        let rtn = setting.get_metas(&parent).unwrap();
+        assert_eq!(rtn.len(), 2);
+        assert_eq!(rtn[0], Meta::from_full_key("/B/p/a", 2).unwrap());
+        assert_eq!(rtn[1], Meta::from_full_key("/B/p/b", 2).unwrap());
+    }
 
     #[test]
     fn json_master_test() {

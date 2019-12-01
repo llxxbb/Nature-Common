@@ -40,7 +40,7 @@ pub struct Meta {
     is_state: bool,
 
     setting: Option<MetaSetting>,
-
+    /// hold all string-state, used to accelerate the check speed.
     check_list: HashMap<String, StatePath>,
 }
 
