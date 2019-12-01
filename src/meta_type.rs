@@ -8,6 +8,8 @@ pub enum MetaType {
     System,
     Dynamic,
     Null,
+    Parallel,
+    Serial,
 }
 
 impl MetaType {
@@ -17,6 +19,8 @@ impl MetaType {
             MetaType::System => "/S".to_string(),
             MetaType::Dynamic => "/D".to_string(),
             MetaType::Null => "/N".to_string(),
+            MetaType::Parallel => "/P".to_string(),
+            MetaType::Serial => "/R".to_string(),
         }
     }
 
@@ -26,6 +30,8 @@ impl MetaType {
             "/S" => Ok(MetaType::System),
             "/D" => Ok(MetaType::Dynamic),
             "/N" => Ok(MetaType::Null),
+            "/P" => Ok(MetaType::Parallel),
+            "/R" => Ok(MetaType::Serial),
             _ => Err(NatureError::VerifyError("unknow prefix : [".to_string() + prefix + "]"))
         }
     }
@@ -55,6 +61,8 @@ mod test {
         assert_eq!("/S", MetaType::System.get_prefix());
         assert_eq!("/D", MetaType::Dynamic.get_prefix());
         assert_eq!("/B", MetaType::Business.get_prefix());
+        assert_eq!("/P", MetaType::Parallel.get_prefix());
+        assert_eq!("/R", MetaType::Serial.get_prefix());
     }
 
     #[test]
@@ -63,11 +71,13 @@ mod test {
         assert_eq!(MetaType::Business, MetaType::from_prefix("/B").unwrap());
         assert_eq!(MetaType::System, MetaType::from_prefix("/S").unwrap());
         assert_eq!(MetaType::Dynamic, MetaType::from_prefix("/D").unwrap());
+        assert_eq!(MetaType::Parallel, MetaType::from_prefix("/P").unwrap());
+        assert_eq!(MetaType::Serial, MetaType::from_prefix("/R").unwrap());
         assert_eq!(Err(NatureError::VerifyError("unknow prefix : [/d]".to_string())), MetaType::from_prefix("/d"));
     }
 
     #[test]
-    fn check_type_test(){
+    fn check_type_test() {
         assert_eq!(Ok(()), MetaType::check_type("/D//dynamic/target/is/null:1", MetaType::Dynamic));
     }
 }
