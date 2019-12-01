@@ -1,4 +1,4 @@
-use crate::{is_default_meta, is_one_u32, MetaType, one_u32};
+use crate::{is_default_meta, is_false, is_one_u32, Meta, MetaType, one_u32, PATH_SEPARATOR, Result};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq, Hash)]
 pub struct MetaSetting {
@@ -35,11 +35,21 @@ pub struct MultiMetaSetting {
     pub meta_type: MetaType,
 }
 
-
-/// This is only used for serialize
-#[allow(clippy::trivially_copy_pass_by_ref)]
-fn is_false(input: &bool) -> bool {
-    !*input
+impl MultiMetaSetting {
+    pub fn get_mets(&self, parent: &Meta) -> Result<Vec<Meta>> {
+        let prefix = if self.prefix.is_empty() {
+            parent.get_key()
+        } else {
+            self.prefix.to_string()
+        };
+        let mut rtn: Vec<Meta> = Vec::new();
+        for k in &self.keys {
+            let key = format!("{}{}{}", prefix, PATH_SEPARATOR, k);
+            let m = Meta::new(&key, self.version, self.meta_type.clone())?;
+            rtn.push(m);
+        }
+        Ok(rtn)
+    }
 }
 
 #[cfg(test)]

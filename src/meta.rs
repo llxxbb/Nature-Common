@@ -10,7 +10,7 @@ use super::NatureError;
 use super::Result;
 
 /// separator for `Meta`'s key
-static PATH_SEPARATOR: char = '/';
+pub static PATH_SEPARATOR: char = '/';
 pub static META_AND_VERSION_SEPARATOR: &str = ":";
 
 /// Business Metadata
@@ -30,7 +30,7 @@ pub struct Meta {
     full_key: String,
 
     /// A `Meta` can be changed in future, the `version` will support this without effect the old ones
-    pub version: i32,
+    pub version: u32,
 
     /// A `Meta`'s type
     meta_type: MetaType,
@@ -77,7 +77,7 @@ impl Meta {
         Ok(biz)
     }
 
-    pub fn new(key: &str, version: i32, meta_type: MetaType) -> Result<Self> {
+    pub fn new(key: &str, version: u32, meta_type: MetaType) -> Result<Self> {
         let key = match meta_type {
             MetaType::Null => "".to_string(),
             _ => Self::key_standardize(key)?
@@ -111,7 +111,7 @@ impl Meta {
     }
 
     /// `full_key`'s format : /[biz type]/[biz key]
-    pub fn from_full_key(full_key: &str, version: i32) -> Result<Meta> {
+    pub fn from_full_key(full_key: &str, version: u32) -> Result<Meta> {
         let err_msg = "illegal format for `full_key` : ".to_string() + full_key.clone();
         if full_key == "/N" {
             return Meta::new(full_key, 1, MetaType::Null);
@@ -129,7 +129,7 @@ impl Meta {
     /// `meta_str`'s format : [full_key]:[version]
     pub fn from_string(meta_str: &str) -> Result<Meta> {
         let (full_key, version) = MetaString::make_tuple_from_str(meta_str)?;
-        Self::from_full_key(&full_key, version)
+        Self::from_full_key(&full_key, version as u32)
     }
 
     pub fn get<T, W>(meta_str: &str, meta_cache_getter: fn(&str, fn(&str) -> Result<T>) -> Result<W>, meta_getter: fn(&str) -> Result<T>) -> Result<W> {
