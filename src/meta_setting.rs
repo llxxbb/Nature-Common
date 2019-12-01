@@ -1,4 +1,4 @@
-use crate::{is_one_u32, one_u32};
+use crate::{is_default_meta, is_one_u32, MetaType, one_u32};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq, Hash)]
 pub struct MetaSetting {
@@ -30,6 +30,9 @@ pub struct MultiMetaSetting {
     #[serde(default = "one_u32")]
     pub version: u32,
     pub keys: Vec<String>,
+    #[serde(skip_serializing_if = "is_default_meta")]
+    #[serde(default)]
+    pub meta_type: MetaType,
 }
 
 
@@ -64,6 +67,7 @@ mod test {
                 prefix: "".to_string(),
                 version: 1,
                 keys: vec!["one".to_string(), "two".to_string()],
+                meta_type: Default::default(),
             }),
             conflict_avoid: false,
         };

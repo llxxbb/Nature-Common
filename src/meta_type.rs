@@ -12,6 +12,12 @@ pub enum MetaType {
     Serial,
 }
 
+impl Default for MetaType {
+    fn default() -> Self {
+        MetaType::Business
+    }
+}
+
 impl MetaType {
     pub fn get_prefix(&self) -> String {
         match self {
