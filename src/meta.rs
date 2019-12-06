@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::{CheckType, MetaSetting, State, StatePath};
 use crate::meta_string::MetaString;
@@ -14,7 +14,7 @@ pub static PATH_SEPARATOR: char = '/';
 pub static META_AND_VERSION_SEPARATOR: &str = ":";
 
 /// Business Metadata
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub struct Meta {
     /// # Identify a `Meta`.
     ///
@@ -41,7 +41,7 @@ pub struct Meta {
 
     setting: Option<MetaSetting>,
     /// hold all string-state, used to accelerate the check speed.
-    check_list: HashMap<String, StatePath>,
+    check_list: BTreeMap<String, StatePath>,
 }
 
 
