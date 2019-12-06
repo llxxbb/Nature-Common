@@ -1,9 +1,10 @@
 use core::fmt;
+use std::collections::BTreeSet;
 
 use serde::{de, Deserialize, Deserializer};
 use serde::de::{Error, MapAccess, SeqAccess, Visitor};
 
-use crate::{Instance, is_default_meta, is_false, is_one_u32, Meta, MetaType, PATH_SEPARATOR, Result};
+use crate::{Instance, is_default_meta, is_false, is_one_u32, Meta, MetaType, NatureError, PATH_SEPARATOR, Result};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq)]
 pub struct MetaSetting {
@@ -40,30 +41,36 @@ pub struct MultiMetaSetting {
     parent_key: String,
     #[serde(skip_serializing)]
     metas: Vec<Meta>,
+    #[serde(skip_serializing)]
+    meta_set: BTreeSet<String>,
 }
 
 impl MultiMetaSetting {
     pub fn new(parent: &str, prefix: &str, version: u32, keys: Vec<String>, meta_type: MetaType) -> Result<Self> {
+        let metas = {
+            let prefix = if prefix.is_empty() {
+                parent.to_string()
+            } else {
+                prefix.to_string()
+            };
+            let mut rtn: Vec<Meta> = Vec::new();
+            for k in &keys {
+                let key = format!("{}{}{}", prefix, PATH_SEPARATOR, k);
+                let m = Meta::new(&key, version, meta_type.clone())?;
+                rtn.push(m);
+            }
+            rtn
+        };
+        let mut meta_set: BTreeSet<String> = BTreeSet::new();
+        metas.iter().for_each(|one| { meta_set.insert(one.meta_string()); });
         let rtn = MultiMetaSetting {
             prefix: prefix.to_string(),
             version,
             keys: keys.clone(),
             meta_type: meta_type.clone(),
-            metas: {
-                let prefix = if prefix.is_empty() {
-                    parent.to_string()
-                } else {
-                    prefix.to_string()
-                };
-                let mut rtn: Vec<Meta> = Vec::new();
-                for k in keys {
-                    let key = format!("{}{}{}", prefix, PATH_SEPARATOR, k);
-                    let m = Meta::new(&key, version, meta_type.clone())?;
-                    rtn.push(m);
-                }
-                rtn
-            },
+            metas,
             parent_key: parent.to_string(),
+            meta_set,
         };
         Ok(rtn)
     }
@@ -71,9 +78,12 @@ impl MultiMetaSetting {
         self.metas.clone()
     }
 
-    pub fn check_metas(&self, _instances: &Vec<Instance>) -> Result<()> {
-        // TODO
-        unimplemented!()
+    pub fn check_metas(&self, instances: &Vec<Instance>) -> Result<()> {
+        let option = instances.iter().find(|one| !self.meta_set.contains(&one.meta));
+        match option {
+            Some(e) => Err(NatureError::VerifyError(format!("undefined meta: {}", e.meta))),
+            None => Ok(())
+        }
     }
 }
 
@@ -227,6 +237,13 @@ impl<'de> Deserialize<'de> for MultiMetaSetting {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn check_meta_test(){
+        let setting = MultiMetaSetting::new("parent", "", 2, vec!["a".to_string(), "b".to_string()], Default::default()).unwrap();
+        let instances: Vec<Instance> = vec![Instance::new("parent".to_string())]
+        setting.check_metas()
+    }
 
     #[test]
     fn get_metas_test() {
