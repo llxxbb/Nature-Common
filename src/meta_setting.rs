@@ -239,18 +239,19 @@ mod test {
     use super::*;
 
     #[test]
-    fn check_meta_test(){
+    fn check_meta_test() {
         let setting = MultiMetaSetting::new("parent", "", 2, vec!["a".to_string(), "b".to_string()], Default::default()).unwrap();
         let mut ins = Instance::new("parent").unwrap();
         let instances: Vec<Instance> = vec![ins.clone()];
         assert_eq!(setting.check_metas(&instances).is_err(), true);
-        ins.meta= "/B/parent/a:2".to_string();
+        ins.meta = "/B/parent/a:2".to_string();
+        let instances: Vec<Instance> = vec![ins.clone()];
+        let result = setting.check_metas(&instances);
+        assert_eq!(result.is_ok(), true);
+        ins.meta = "/B/parent/b:2".to_string();
         let instances: Vec<Instance> = vec![ins.clone()];
         assert_eq!(setting.check_metas(&instances).is_ok(), true);
-        ins.meta= "/B/parent/b:2".to_string();
-        let instances: Vec<Instance> = vec![ins.clone()];
-        assert_eq!(setting.check_metas(&instances).is_ok(), true);
-        ins.meta= "/B/parent/c:2".to_string();
+        ins.meta = "/B/parent/c:2".to_string();
         let instances: Vec<Instance> = vec![ins.clone()];
         assert_eq!(setting.check_metas(&instances).is_err(), true);
     }

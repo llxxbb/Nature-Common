@@ -22,40 +22,37 @@ pub struct Meta {
     /// Because there are huge quantity of `Meta`s , so we need a way to organize `Meta`s.
     /// A way is to set name with hierarchical structures,
     key: String,
-
     /// key with `MetaType` prefix
     /// # Value Example
     ///
     /// /B/shop/order
     full_key: String,
-
     /// A `Meta` can be changed in future, the `version` will support this without effect the old ones
     pub version: u32,
-
     /// A `Meta`'s type
     meta_type: MetaType,
-
     state: Option<States>,
-
     is_state: bool,
-
     setting: Option<MetaSetting>,
     /// hold all string-state, used to accelerate the check speed.
     check_list: BTreeMap<String, StatePath>,
+    string: String,
 }
 
 
 impl Default for Meta {
     fn default() -> Self {
+        let full_key = MetaType::Business.get_prefix();
         Meta {
             key: String::new(),
-            full_key: MetaType::Business.get_prefix(),
+            full_key: full_key.clone(),
             version: 1,
             meta_type: MetaType::Business,
             state: None,
             is_state: false,
             setting: None,
             check_list: Default::default(),
+            string: full_key + META_AND_VERSION_SEPARATOR + &1.to_string(),
         }
     }
 }
@@ -82,15 +79,17 @@ impl Meta {
             MetaType::Null => "".to_string(),
             _ => Self::key_standardize(key)?
         };
+        let full_key = meta_type.get_prefix() + &key;
         Ok(Meta {
             key: key.to_string(),
-            full_key: meta_type.get_prefix() + &key,
+            full_key: full_key.clone(),
             version,
             meta_type,
             state: None,
             is_state: false,
             setting: None,
             check_list: Default::default(),
+            string: full_key + META_AND_VERSION_SEPARATOR + &version.to_string(),
         })
     }
 
@@ -107,7 +106,8 @@ impl Meta {
     }
     pub fn set_meta_type(&mut self, meta_type: MetaType) {
         self.meta_type = meta_type.clone();
-        self.full_key = meta_type.get_prefix() + &self.key.clone();
+        self.full_key = meta_type.get_prefix() + &self.key;
+        self.string = self.full_key.clone() + META_AND_VERSION_SEPARATOR + &1.to_string()
     }
 
     /// `full_key`'s format : /[biz type]/[biz key]
@@ -143,7 +143,7 @@ impl Meta {
     }
 
     pub fn meta_string(&self) -> String {
-        self.full_key.clone() + META_AND_VERSION_SEPARATOR + &self.version.to_string()
+        self.string.clone()
     }
 
     pub fn set_states(&mut self, states: Option<States>) -> Result<()> {
