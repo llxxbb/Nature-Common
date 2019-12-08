@@ -6,7 +6,7 @@ use std::str::FromStr;
 
 use chrono::prelude::*;
 
-use crate::{FromInstance, generate_id, NatureError, ParaForQueryByID, Result, TargetState};
+use crate::{FromInstance, generate_id, NatureError, ParaForQueryByID, PART_SEPARATOR, Result, TargetState, MetaType};
 use crate::converter::DynamicConverter;
 
 use super::Meta;
@@ -35,7 +35,7 @@ impl Instance {
         Ok(Instance {
             id: 0,
             data: BizObject {
-                meta: format!("/B{}:1", key),
+                meta: format!("{}{}{}:1", MetaType::default().get_prefix(), PART_SEPARATOR, key),
                 content: "".to_string(),
                 context: HashMap::new(),
                 states: HashSet::new(),
@@ -210,7 +210,7 @@ mod test {
         assert_eq!(instance.execute_time, 0);
         assert_eq!(instance.create_time, 0);
         let _ = instance.check_and_revise(meta_cache, meta_getter);
-        assert_eq!(instance.id, 61240780657743859318321580345734237010);
+        assert_eq!(instance.id, 339588997148173757236197912387121387891);
         assert_eq!(instance.execute_time > 0, true);
         assert_eq!(instance.create_time > 0, true);
     }

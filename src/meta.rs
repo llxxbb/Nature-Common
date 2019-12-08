@@ -21,11 +21,6 @@ pub struct Meta {
     /// Because there are huge quantity of `Meta`s , so we need a way to organize `Meta`s.
     /// A way is to set name with hierarchical structures,
     key: String,
-    /// key with `MetaType` prefix
-    /// # Value Example
-    ///
-    /// B:shop/order
-    full_key: String,
     /// A `Meta` can be changed in future, the `version` will support this without effect the old ones
     pub version: u32,
     /// A `Meta`'s type
@@ -35,7 +30,7 @@ pub struct Meta {
     setting: Option<MetaSetting>,
     /// hold all string-state, used to accelerate the check speed.
     check_list: BTreeMap<String, StatePath>,
-    string: String,
+    meta: String,
 }
 
 
@@ -44,14 +39,13 @@ impl Default for Meta {
         let full_key = MetaType::Business.get_prefix();
         Meta {
             key: String::new(),
-            full_key: full_key.clone(),
             version: 1,
             meta_type: MetaType::Business,
             state: None,
             is_state: false,
             setting: None,
             check_list: Default::default(),
-            string: full_key + PART_SEPARATOR + &1.to_string(),
+            meta: full_key + PART_SEPARATOR + &1.to_string(),
         }
     }
 }
@@ -64,11 +58,14 @@ impl Meta {
             let last = biz.len() - 1;
             biz.remove(last);
         }
+        if biz.starts_with(PATH_SEPARATOR) {
+            biz = biz[1..].to_string();
+        }
         if biz.is_empty() {
             return Err(NatureError::VerifyError("key length can't be zero".to_string()));
         }
-        if !biz.starts_with(PATH_SEPARATOR) {
-            biz.insert(0, PATH_SEPARATOR);
+        if biz.contains(PART_SEPARATOR) {
+            return Err(NatureError::VerifyError("key can not contains [:] character".to_string()));
         }
         Ok(biz)
     }
@@ -78,20 +75,16 @@ impl Meta {
             MetaType::Null => "".to_string(),
             _ => Self::key_standardize(key)?
         };
-        let full_key = match key.is_empty() {
-            true => meta_type.get_prefix(),
-            false => meta_type.get_prefix() + PART_SEPARATOR + &key,
-        };
+        let prefix = meta_type.get_prefix();
         Ok(Meta {
             key: key.to_string(),
-            full_key: full_key.clone(),
             version,
             meta_type,
             state: None,
             is_state: false,
             setting: None,
             check_list: Default::default(),
-            string: full_key + PART_SEPARATOR + &version.to_string(),
+            meta: prefix + PART_SEPARATOR + &key + PART_SEPARATOR + &version.to_string(),
         })
     }
 
@@ -99,19 +92,13 @@ impl Meta {
         self.key.clone()
     }
 
-    pub fn get_full_key(&self) -> String {
-        self.full_key.clone()
-    }
-
     pub fn get_meta_type(&self) -> MetaType {
         self.meta_type.clone()
     }
     pub fn set_meta_type(&mut self, meta_type: MetaType) {
         self.meta_type = meta_type.clone();
-        self.full_key = meta_type.get_prefix() + &self.key;
-        self.string = self.full_key.clone() + PART_SEPARATOR + &1.to_string()
+        self.meta = meta_type.get_prefix() + &self.key + PART_SEPARATOR + &1.to_string()
     }
-
 
     /// `meta_str`'s format : [MetaType]:[key]:[version]
     pub fn from_string(meta_str: &str) -> Result<Meta> {
@@ -141,13 +128,13 @@ impl Meta {
     }
 
     pub fn meta_string(&self) -> String {
-        self.string.clone()
+        self.meta.clone()
     }
 
     pub fn set_states(&mut self, states: Option<States>) -> Result<()> {
         match states {
             Some(ss) => {
-                Self::avoid_same_name(&ss, &self.meta_string())?;
+                Self::avoid_same_name(&ss)?;
                 self.init_check_list(&ss, 0, &mut Default::default());
                 self.state = Some(ss);
                 self.is_state = true;
@@ -251,11 +238,12 @@ impl Meta {
         self.is_state
     }
 
-    fn avoid_same_name(s: &States, string_meta: &str) -> Result<()> {
+    fn avoid_same_name(s: &States) -> Result<()> {
         let mut set: HashSet<String> = HashSet::new();
         for one in s {
-            if !set.insert(one.get_name()) {
-                return Err(NatureError::VerifyError(format!("repeated state name: {:?}, for `Meta`: {:?}", one.get_name(), string_meta)));
+            let result = set.insert(one.get_name());
+            if !result {
+                return Err(NatureError::VerifyError(format!("repeated state name: [{}]", one.get_name())));
             }
         }
         Ok(())
@@ -308,16 +296,22 @@ mod test {
     }
 
     #[test]
+    fn key_can_not_contain_colon() {
+        let result = Meta::key_standardize("a:b");
+        assert_eq!(result, Err(NatureError::VerifyError("key can not contains [:] character".to_string())));
+    }
+
+    #[test]
     fn key_can_be_empty_except_for_null_meta_type() {
         // key is empty
         let meta = Meta::new("", 1, MetaType::Null).unwrap();
         assert_eq!(MetaType::Null, meta.get_meta_type());
-        assert_eq!(meta.get_full_key(), "N");
+        assert_eq!(meta.meta_string(), "N::1");
 
         // key is not empty
         let meta = Meta::new("not empty", 1, MetaType::Null).unwrap();
         assert_eq!(MetaType::Null, meta.get_meta_type());
-        assert_eq!(meta.get_full_key(), "N");
+        assert_eq!(meta.meta_string(), "N::1");
     }
 
     /// also test for removing last separator and Business prefix
@@ -326,9 +320,9 @@ mod test {
         println!("----------------- standardize_no_separator_at_beginning --------------------");
         let key = "a/b/c/".to_string();
         let rtn = Meta::new(&key, 1, MetaType::Business);
-        assert_eq!("/a/b/c", rtn.unwrap().key);
+        assert_eq!("a/b/c", rtn.unwrap().key);
         let rtn = Meta::new(&key, 1, MetaType::Business);
-        assert_eq!("B:a/b/c", rtn.unwrap().get_full_key());
+        assert_eq!("B:a/b/c:1", rtn.unwrap().meta_string());
     }
 
     #[test]
@@ -336,28 +330,28 @@ mod test {
         println!("----------------- standardize_no_separator_at_beginning --------------------");
         let key = "a/b/c/".to_string();
         let rtn = Meta::new(&key, 1, MetaType::System);
-        assert_eq!(rtn.unwrap().get_full_key(), "/S/a/b/c");
+        assert_eq!(rtn.unwrap().meta_string(), "S:a/b/c:1");
         let rtn = Meta::new(&key, 1, MetaType::Dynamic);
-        assert_eq!(rtn.unwrap().get_full_key(), "/D/a/b/c");
+        assert_eq!(rtn.unwrap().meta_string(), "D:a/b/c:1");
         let rtn = Meta::new(&key, 1, MetaType::Business);
-        assert_eq!(rtn.unwrap().get_full_key(), "B:a/b/c");
+        assert_eq!(rtn.unwrap().meta_string(), "B:a/b/c:1");
         let rtn = Meta::new(&key, 1, MetaType::Null);
-        assert_eq!(rtn.unwrap().get_full_key(), "/N");
+        assert_eq!(rtn.unwrap().meta_string(), "N::1");
     }
 
     #[test]
     fn from_meta_str() {
         // error full_key
-        assert_eq!(Meta::from_string(":1"), Err(NatureError::VerifyError("illegal format for `full_key` : ".to_string())));
-        assert_eq!(Meta::from_string("/s:1"), Err(NatureError::VerifyError("illegal format for `full_key` : /s".to_string())));
-        assert_eq!(Meta::from_string("/ss:1"), Err(NatureError::VerifyError("illegal format for `full_key` : /ss".to_string())));
-        assert_eq!(Meta::from_string("/s/s:1"), Err(NatureError::VerifyError("unknow prefix : [/s]".to_string())));
-        assert_eq!(Meta::from_string("/N:1"), Meta::new("/N", 1, MetaType::Null));
-        assert_eq!(Meta::from_string("/Na:1"), Err(NatureError::VerifyError("illegal format for `full_key` : /Na".to_string())));
-        assert_eq!(Meta::from_string("/N/a:1"), Meta::new("/a", 1, MetaType::Null));
-        assert_eq!(Meta::from_string("/D/hello:1"), Meta::new("/hello", 1, MetaType::Dynamic));
-        assert_eq!(Meta::from_string("/S/world:1"), Meta::new("/world", 1, MetaType::System));
-        assert_eq!(Meta::from_string("B:my:1"), Meta::new("/my", 1, MetaType::Business));
+        assert_eq!(Meta::from_string(":1"), Err(NatureError::VerifyError("format should be [MetaType]:[key]:[version]".to_string())));
+        assert_eq!(Meta::from_string("s:1"), Err(NatureError::VerifyError("format should be [MetaType]:[key]:[version]".to_string())));
+        assert_eq!(Meta::from_string("ss:1"), Err(NatureError::VerifyError("format should be [MetaType]:[key]:[version]".to_string())));
+        assert_eq!(Meta::from_string("s:s:1"), Err(NatureError::VerifyError("unknow prefix : [s]".to_string())));
+        assert_eq!(Meta::from_string("N::1"), Meta::new("", 1, MetaType::Null));
+        assert_eq!(Meta::from_string("Na:1"), Err(NatureError::VerifyError("format should be [MetaType]:[key]:[version]".to_string())));
+        assert_eq!(Meta::from_string("N:a:1"), Meta::new("a", 1, MetaType::Null));
+        assert_eq!(Meta::from_string("D:hello:1"), Meta::new("hello", 1, MetaType::Dynamic));
+        assert_eq!(Meta::from_string("S:world:1"), Meta::new("world", 1, MetaType::System));
+        assert_eq!(Meta::from_string("B:my:1"), Meta::new("my", 1, MetaType::Business));
     }
 
     #[test]

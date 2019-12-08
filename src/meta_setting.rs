@@ -267,7 +267,7 @@ mod test {
 
     #[test]
     fn get_metas_with_prefix_test() {
-        let setting = MultiMetaSetting::new("/M/parent", "p", 2, vec!["a".to_string(), "b".to_string()], Default::default()).unwrap();
+        let setting = MultiMetaSetting::new("M:parent", "p", 2, vec!["a".to_string(), "b".to_string()], Default::default()).unwrap();
         let rtn = setting.get_metas();
         assert_eq!(rtn.len(), 2);
         assert_eq!(rtn[0], Meta::from_string("B:p/a:2").unwrap());
