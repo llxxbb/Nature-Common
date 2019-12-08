@@ -244,14 +244,14 @@ mod test {
         let mut ins = Instance::new("parent").unwrap();
         let instances: Vec<Instance> = vec![ins.clone()];
         assert_eq!(setting.check_metas(&instances).is_err(), true);
-        ins.meta = "/B/parent/a:2".to_string();
+        ins.meta = "B:parent/a:2".to_string();
         let instances: Vec<Instance> = vec![ins.clone()];
         let result = setting.check_metas(&instances);
         assert_eq!(result.is_ok(), true);
-        ins.meta = "/B/parent/b:2".to_string();
+        ins.meta = "B:parent/b:2".to_string();
         let instances: Vec<Instance> = vec![ins.clone()];
         assert_eq!(setting.check_metas(&instances).is_ok(), true);
-        ins.meta = "/B/parent/c:2".to_string();
+        ins.meta = "B:parent/c:2".to_string();
         let instances: Vec<Instance> = vec![ins.clone()];
         assert_eq!(setting.check_metas(&instances).is_err(), true);
     }
@@ -261,17 +261,17 @@ mod test {
         let setting = MultiMetaSetting::new("parent", "", 2, vec!["a".to_string(), "b".to_string()], Default::default()).unwrap();
         let rtn = setting.get_metas();
         assert_eq!(rtn.len(), 2);
-        assert_eq!(rtn[0], Meta::from_full_key("/B/parent/a", 2).unwrap());
-        assert_eq!(rtn[1], Meta::from_full_key("/B/parent/b", 2).unwrap());
+        assert_eq!(rtn[0], Meta::from_string("B:parent/a:2").unwrap());
+        assert_eq!(rtn[1], Meta::from_string("B:parent/b:2").unwrap());
     }
 
     #[test]
     fn get_metas_with_prefix_test() {
-        let setting = MultiMetaSetting::new("/P/parent", "p", 2, vec!["a".to_string(), "b".to_string()], Default::default()).unwrap();
+        let setting = MultiMetaSetting::new("/M/parent", "p", 2, vec!["a".to_string(), "b".to_string()], Default::default()).unwrap();
         let rtn = setting.get_metas();
         assert_eq!(rtn.len(), 2);
-        assert_eq!(rtn[0], Meta::from_full_key("/B/p/a", 2).unwrap());
-        assert_eq!(rtn[1], Meta::from_full_key("/B/p/b", 2).unwrap());
+        assert_eq!(rtn[0], Meta::from_string("B:p/a:2").unwrap());
+        assert_eq!(rtn[1], Meta::from_string("B:p/b:2").unwrap());
     }
 
     #[test]

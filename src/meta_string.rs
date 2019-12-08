@@ -1,4 +1,4 @@
-use crate::{Meta, META_AND_VERSION_SEPARATOR, MetaType, NatureError, Result};
+use crate::{Meta, MetaType, Result};
 
 pub struct MetaString;
 
@@ -29,14 +29,6 @@ impl MetaString {
 
     pub fn make_meta_string(full_key: &str, version: i32) -> String {
         format!("{}:{}", full_key, version)
-    }
-
-    pub fn make_tuple_from_str(meta_str: &str) -> Result<(String, i32)> {
-        let x: Vec<&str> = meta_str.split(META_AND_VERSION_SEPARATOR).collect();
-        if x.len() != 2 {
-            return Err(NatureError::VerifyError("error meta string format".to_string()));
-        }
-        Ok((x[0].to_string(), x[1].parse::<i32>()?))
     }
 
     pub fn full_key(key: &str) -> Result<String> {

@@ -252,15 +252,15 @@ mod test {
     #[test]
     fn instance_new_test() {
         let ins = Instance::new("hello").unwrap();
-        assert_eq!(ins.meta, "/B/hello:1");
+        assert_eq!(ins.meta, "B:hello:1");
         let ins = Instance::new("/hello").unwrap();
-        assert_eq!(ins.meta, "/B/hello:1");
+        assert_eq!(ins.meta, "B:hello:1");
     }
 
     #[test]
     fn unique_id_test() {
         let ins = Instance::new("hello").unwrap();
-        assert_eq!(ins.get_unique(), "/B/hello:10");
+        assert_eq!(ins.get_unique(), "B:hello:10");
     }
 
     fn meta_cache(m: &str, _: fn(&str) -> Result<String>) -> Result<Meta> {
