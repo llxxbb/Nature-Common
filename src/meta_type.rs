@@ -9,7 +9,6 @@ pub enum MetaType {
     Dynamic,
     Null,
     Multi,
-    Serial,
 }
 
 impl Default for MetaType {
@@ -26,8 +25,6 @@ impl MetaType {
             MetaType::Dynamic => "D".to_string(),
             MetaType::Null => "N".to_string(),
             MetaType::Multi => "M".to_string(),
-            // TODO remove `Serial`
-            MetaType::Serial => "R".to_string(),
         }
     }
 
@@ -38,7 +35,6 @@ impl MetaType {
             "D" => Ok(MetaType::Dynamic),
             "N" => Ok(MetaType::Null),
             "M" => Ok(MetaType::Multi),
-            "R" => Ok(MetaType::Serial),
             _ => Err(NatureError::VerifyError("unknow prefix : [".to_string() + prefix + "]"))
         }
     }
@@ -68,7 +64,6 @@ mod test {
         assert_eq!("D", MetaType::Dynamic.get_prefix());
         assert_eq!("B", MetaType::Business.get_prefix());
         assert_eq!("M", MetaType::Multi.get_prefix());
-        assert_eq!("R", MetaType::Serial.get_prefix());
     }
 
     #[test]
@@ -78,7 +73,6 @@ mod test {
         assert_eq!(MetaType::System, MetaType::from_prefix("S").unwrap());
         assert_eq!(MetaType::Dynamic, MetaType::from_prefix("D").unwrap());
         assert_eq!(MetaType::Multi, MetaType::from_prefix("M").unwrap());
-        assert_eq!(MetaType::Serial, MetaType::from_prefix("R").unwrap());
         assert_eq!(Err(NatureError::VerifyError("unknow prefix : [/d]".to_string())), MetaType::from_prefix("/d"));
     }
 
