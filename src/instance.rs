@@ -6,7 +6,7 @@ use std::str::FromStr;
 
 use chrono::prelude::*;
 
-use crate::{FromInstance, generate_id, NatureError, ParaForQueryByID, PART_SEPARATOR, Result, TargetState, MetaType};
+use crate::{FromInstance, generate_id, MetaType, NatureError, ParaForQueryByID, PART_SEPARATOR, Result, TargetState};
 use crate::converter::DynamicConverter;
 
 use super::Meta;
@@ -61,11 +61,8 @@ impl Instance {
         if self.execute_time == 0 {
             self.execute_time = now;
         }
-        match self.para.is_empty() {
-            true => if self.id == 0 {
-                self.id = generate_id(&self.data)?;
-            }
-            _ => self.id = 0
+        if self.para.is_empty() && self.id == 0 {
+            self.id = generate_id(&self.data)?;
         }
         Ok(self)
     }
