@@ -9,7 +9,7 @@ use uuid;
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum NatureError {
     VerifyError(String),
-    ConverterLogicalError(String),
+    LogicalError(String),
     DaoDuplicated(String),
     SystemError(String),
     EnvironmentError(String),
