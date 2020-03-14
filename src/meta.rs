@@ -1,7 +1,6 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::{CheckType, MetaSetting, State, StatePath};
-use crate::meta_string::MetaString;
 use crate::NatureError::VerifyError;
 use crate::state::States;
 
@@ -10,11 +9,11 @@ use super::NatureError;
 use super::Result;
 
 /// separator for `Meta`'s key
-static PATH_SEPARATOR: char = '/';
-pub static META_AND_VERSION_SEPARATOR: &str = ":";
+pub static PATH_SEPARATOR: char = '/';
+pub static PART_SEPARATOR: &str = ":";
 
 /// Business Metadata
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub struct Meta {
     /// # Identify a `Meta`.
     ///
@@ -22,40 +21,31 @@ pub struct Meta {
     /// Because there are huge quantity of `Meta`s , so we need a way to organize `Meta`s.
     /// A way is to set name with hierarchical structures,
     key: String,
-
-    /// key with `MetaType` prefix
-    /// # Value Example
-    ///
-    /// /B/shop/order
-    full_key: String,
-
     /// A `Meta` can be changed in future, the `version` will support this without effect the old ones
-    pub version: i32,
-
+    pub version: u32,
     /// A `Meta`'s type
     meta_type: MetaType,
-
     state: Option<States>,
-
     is_state: bool,
-
     setting: Option<MetaSetting>,
-
-    check_list: HashMap<String, StatePath>,
+    /// hold all string-state, used to accelerate the check speed.
+    check_list: BTreeMap<String, StatePath>,
+    meta: String,
 }
 
 
 impl Default for Meta {
     fn default() -> Self {
+        let full_key = MetaType::Business.get_prefix();
         Meta {
             key: String::new(),
-            full_key: MetaType::Business.get_prefix(),
             version: 1,
             meta_type: MetaType::Business,
             state: None,
             is_state: false,
             setting: None,
             check_list: Default::default(),
+            meta: full_key + PART_SEPARATOR + &1.to_string(),
         }
     }
 }
@@ -68,29 +58,33 @@ impl Meta {
             let last = biz.len() - 1;
             biz.remove(last);
         }
+        if biz.starts_with(PATH_SEPARATOR) {
+            biz = biz[1..].to_string();
+        }
         if biz.is_empty() {
             return Err(NatureError::VerifyError("key length can't be zero".to_string()));
         }
-        if !biz.starts_with(PATH_SEPARATOR) {
-            biz.insert(0, PATH_SEPARATOR);
+        if biz.contains(PART_SEPARATOR) {
+            return Err(NatureError::VerifyError("key can not contains [:] character".to_string()));
         }
         Ok(biz)
     }
 
-    pub fn new(key: &str, version: i32, meta_type: MetaType) -> Result<Self> {
+    pub fn new(key: &str, version: u32, meta_type: MetaType) -> Result<Self> {
         let key = match meta_type {
             MetaType::Null => "".to_string(),
             _ => Self::key_standardize(key)?
         };
+        let prefix = meta_type.get_prefix();
         Ok(Meta {
             key: key.to_string(),
-            full_key: meta_type.get_prefix() + &key,
             version,
             meta_type,
             state: None,
             is_state: false,
             setting: None,
             check_list: Default::default(),
+            meta: prefix + PART_SEPARATOR + &key + PART_SEPARATOR + &version.to_string(),
         })
     }
 
@@ -98,38 +92,29 @@ impl Meta {
         self.key.clone()
     }
 
-    pub fn get_full_key(&self) -> String {
-        self.full_key.clone()
-    }
-
     pub fn get_meta_type(&self) -> MetaType {
         self.meta_type.clone()
     }
     pub fn set_meta_type(&mut self, meta_type: MetaType) {
         self.meta_type = meta_type.clone();
-        self.full_key = meta_type.get_prefix() + &self.key.clone();
+        self.meta = meta_type.get_prefix() + &self.key + PART_SEPARATOR + &1.to_string()
     }
 
-    /// `full_key`'s format : /[biz type]/[biz key]
-    pub fn from_full_key(full_key: &str, version: i32) -> Result<Meta> {
-        let err_msg = "illegal format for `full_key` : ".to_string() + full_key.clone();
-        if full_key == "/N" {
-            return Meta::new(full_key, 1, MetaType::Null);
-        }
-        if full_key.len() < 3 {
-            return Err(NatureError::VerifyError(err_msg));
-        }
-        if &full_key[2..3] != "/" {
-            return Err(NatureError::VerifyError(err_msg));
-        }
-        let meta_type = MetaType::from_prefix(&full_key[0..2])?;
-        Meta::new(&full_key[3..], version, meta_type)
-    }
-
-    /// `meta_str`'s format : [full_key]:[version]
+    /// `meta_str`'s format : [MetaType]:[key]:[version]
     pub fn from_string(meta_str: &str) -> Result<Meta> {
-        let (full_key, version) = MetaString::make_tuple_from_str(meta_str)?;
-        Self::from_full_key(&full_key, version)
+        let x: Vec<&str> = meta_str.split(PART_SEPARATOR).collect();
+        if x.len() != 3 {
+            return Err(NatureError::VerifyError("format should be [MetaType]:[key]:[version]".to_string()));
+        }
+        let meta_type = MetaType::from_prefix(x[0])?;
+        if meta_type == MetaType::Null {
+            return Meta::new("", 1, MetaType::Null);
+        }
+        let version = match x[2].parse::<u32>() {
+            Ok(ver) => ver,
+            Err(_) => return Err(NatureError::VerifyError("the end of the meta_str should be i32 type".to_string())),
+        };
+        Meta::new(x[1], version, meta_type)
     }
 
     pub fn get<T, W>(meta_str: &str, meta_cache_getter: fn(&str, fn(&str) -> Result<T>) -> Result<W>, meta_getter: fn(&str) -> Result<T>) -> Result<W> {
@@ -143,13 +128,13 @@ impl Meta {
     }
 
     pub fn meta_string(&self) -> String {
-        self.full_key.clone() + META_AND_VERSION_SEPARATOR + &self.version.to_string()
+        self.meta.clone()
     }
 
     pub fn set_states(&mut self, states: Option<States>) -> Result<()> {
         match states {
             Some(ss) => {
-                Self::avoid_same_name(&ss, &self.meta_string())?;
+                Self::avoid_same_name(&ss)?;
                 self.init_check_list(&ss, 0, &mut Default::default());
                 self.state = Some(ss);
                 self.is_state = true;
@@ -253,11 +238,12 @@ impl Meta {
         self.is_state
     }
 
-    fn avoid_same_name(s: &States, string_meta: &str) -> Result<()> {
+    fn avoid_same_name(s: &States) -> Result<()> {
         let mut set: HashSet<String> = HashSet::new();
         for one in s {
-            if !set.insert(one.get_name()) {
-                return Err(NatureError::VerifyError(format!("repeated state name: {:?}, for `Meta`: {:?}", one.get_name(), string_meta)));
+            let result = set.insert(one.get_name());
+            if !result {
+                return Err(NatureError::VerifyError(format!("repeated state name: [{}]", one.get_name())));
             }
         }
         Ok(())
@@ -310,16 +296,22 @@ mod test {
     }
 
     #[test]
+    fn key_can_not_contain_colon() {
+        let result = Meta::key_standardize("a:b");
+        assert_eq!(result, Err(NatureError::VerifyError("key can not contains [:] character".to_string())));
+    }
+
+    #[test]
     fn key_can_be_empty_except_for_null_meta_type() {
         // key is empty
         let meta = Meta::new("", 1, MetaType::Null).unwrap();
         assert_eq!(MetaType::Null, meta.get_meta_type());
-        assert_eq!("/N", meta.get_full_key());
+        assert_eq!(meta.meta_string(), "N::1");
 
         // key is not empty
         let meta = Meta::new("not empty", 1, MetaType::Null).unwrap();
         assert_eq!(MetaType::Null, meta.get_meta_type());
-        assert_eq!("/N", meta.get_full_key());
+        assert_eq!(meta.meta_string(), "N::1");
     }
 
     /// also test for removing last separator and Business prefix
@@ -328,9 +320,9 @@ mod test {
         println!("----------------- standardize_no_separator_at_beginning --------------------");
         let key = "a/b/c/".to_string();
         let rtn = Meta::new(&key, 1, MetaType::Business);
-        assert_eq!("/a/b/c", rtn.unwrap().key);
+        assert_eq!("a/b/c", rtn.unwrap().key);
         let rtn = Meta::new(&key, 1, MetaType::Business);
-        assert_eq!("/B/a/b/c", rtn.unwrap().get_full_key());
+        assert_eq!("B:a/b/c:1", rtn.unwrap().meta_string());
     }
 
     #[test]
@@ -338,28 +330,28 @@ mod test {
         println!("----------------- standardize_no_separator_at_beginning --------------------");
         let key = "a/b/c/".to_string();
         let rtn = Meta::new(&key, 1, MetaType::System);
-        assert_eq!(rtn.unwrap().get_full_key(), "/S/a/b/c");
+        assert_eq!(rtn.unwrap().meta_string(), "S:a/b/c:1");
         let rtn = Meta::new(&key, 1, MetaType::Dynamic);
-        assert_eq!(rtn.unwrap().get_full_key(), "/D/a/b/c");
+        assert_eq!(rtn.unwrap().meta_string(), "D:a/b/c:1");
         let rtn = Meta::new(&key, 1, MetaType::Business);
-        assert_eq!(rtn.unwrap().get_full_key(), "/B/a/b/c");
+        assert_eq!(rtn.unwrap().meta_string(), "B:a/b/c:1");
         let rtn = Meta::new(&key, 1, MetaType::Null);
-        assert_eq!(rtn.unwrap().get_full_key(), "/N");
+        assert_eq!(rtn.unwrap().meta_string(), "N::1");
     }
 
     #[test]
     fn from_meta_str() {
         // error full_key
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : ".to_string())), Meta::from_string(":1"));
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /s".to_string())), Meta::from_string("/s:1"));
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /ss".to_string())), Meta::from_string("/ss:1"));
-        assert_eq!(Err(NatureError::VerifyError("unknow prefix : [/s]".to_string())), Meta::from_string("/s/s:1"));
-        assert_eq!(Meta::new("/N", 1, MetaType::Null), Meta::from_string("/N:1"));
-        assert_eq!(Err(NatureError::VerifyError("illegal format for `full_key` : /Na".to_string())), Meta::from_string("/Na:1"));
-        assert_eq!(Meta::new("/a", 1, MetaType::Null), Meta::from_string("/N/a:1"));
-        assert_eq!(Meta::new("/hello", 1, MetaType::Dynamic), Meta::from_string("/D/hello:1"));
-        assert_eq!(Meta::new("/world", 1, MetaType::System), Meta::from_string("/S/world:1"));
-        assert_eq!(Meta::new("/my", 1, MetaType::Business), Meta::from_string("/B/my:1"));
+        assert_eq!(Meta::from_string(":1"), Err(NatureError::VerifyError("format should be [MetaType]:[key]:[version]".to_string())));
+        assert_eq!(Meta::from_string("s:1"), Err(NatureError::VerifyError("format should be [MetaType]:[key]:[version]".to_string())));
+        assert_eq!(Meta::from_string("ss:1"), Err(NatureError::VerifyError("format should be [MetaType]:[key]:[version]".to_string())));
+        assert_eq!(Meta::from_string("s:s:1"), Err(NatureError::VerifyError("unknow prefix : [s]".to_string())));
+        assert_eq!(Meta::from_string("N::1"), Meta::new("", 1, MetaType::Null));
+        assert_eq!(Meta::from_string("Na:1"), Err(NatureError::VerifyError("format should be [MetaType]:[key]:[version]".to_string())));
+        assert_eq!(Meta::from_string("N:a:1"), Meta::new("a", 1, MetaType::Null));
+        assert_eq!(Meta::from_string("D:hello:1"), Meta::new("hello", 1, MetaType::Dynamic));
+        assert_eq!(Meta::from_string("S:world:1"), Meta::new("world", 1, MetaType::System));
+        assert_eq!(Meta::from_string("B:my:1"), Meta::new("my", 1, MetaType::Business));
     }
 
     #[test]
@@ -374,7 +366,7 @@ mod test {
     #[test]
     fn meta_string_test() {
         let m = Meta::new("hello", 1, MetaType::Business).unwrap();
-        assert_eq!(m.meta_string(), "/B/hello:1");
+        assert_eq!(m.meta_string(), "B:hello:1");
     }
 
     #[test]
@@ -384,6 +376,8 @@ mod test {
         let setting = serde_json::to_string(&MetaSetting {
             is_state: false,
             master: Some("hello2".to_string()),
+            multi_meta: None,
+            conflict_avoid: false,
         }).unwrap();
         let rtn = m.set_setting(&setting);
         assert_eq!(rtn, Err(NatureError::VerifyError("[master] is only useful for state-meta".to_string())));
@@ -396,6 +390,8 @@ mod test {
         let setting = serde_json::to_string(&MetaSetting {
             is_state: true,
             master: Some("hello2".to_string()),
+            multi_meta: None,
+            conflict_avoid: false,
         }).unwrap();
         let rtn = m.set_setting(&setting);
         assert_eq!(rtn, Ok(()));
@@ -410,7 +406,7 @@ mod verify_test {
     fn not_a_state_meta() {
         let meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
         let rtn = meta.check_state(&vec![]);
-        assert_eq!(rtn, Err(NatureError::VerifyError("[/B/hello:1] is not a state meta".to_string())))
+        assert_eq!(rtn, Err(NatureError::VerifyError("[B:hello:1] is not a state meta".to_string())))
     }
 
     #[test]
@@ -419,11 +415,13 @@ mod verify_test {
         let setting = serde_json::to_string(&MetaSetting {
             is_state: true,
             master: None,
+            multi_meta: None,
+            conflict_avoid: false,
         }).unwrap();
         let _ = meta.set_setting(&setting);
         let set: Vec<String> = vec!["a".to_string()];
         let rtn = meta.check_state(&set);
-        assert_eq!(rtn, Err(NatureError::VerifyError("[a] does not defined in meta: /B/hello:1".to_string())))
+        assert_eq!(rtn, Err(NatureError::VerifyError("[a] does not defined in meta: B:hello:1".to_string())))
     }
 
     #[test]
@@ -497,6 +495,9 @@ mod verify_test {
 
         let set = vec!["c".to_string(), "e".to_string()];
         let rtn = meta.check_state(&set);
-        assert_eq!(rtn, Ok((vec!["c".to_string(), "e".to_string()], vec![])));
+        let rtn: Vec<String> = rtn.unwrap().0;
+        assert_eq!(rtn.len(), 2);
+        assert_eq!(rtn.contains(&"c".to_string()), true);
+        assert_eq!(rtn.contains(&"e".to_string()), true);
     }
 }

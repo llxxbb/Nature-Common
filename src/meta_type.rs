@@ -1,5 +1,5 @@
+use crate::{PART_SEPARATOR, Result};
 use crate::error::NatureError;
-use crate::Result;
 
 /// Every `Meta` must have a type
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug, Clone, Ord, PartialOrd)]
@@ -8,38 +8,46 @@ pub enum MetaType {
     System,
     Dynamic,
     Null,
+    Multi,
+}
+
+impl Default for MetaType {
+    fn default() -> Self {
+        MetaType::Business
+    }
 }
 
 impl MetaType {
     pub fn get_prefix(&self) -> String {
         match self {
-            MetaType::Business => "/B".to_string(),
-            MetaType::System => "/S".to_string(),
-            MetaType::Dynamic => "/D".to_string(),
-            MetaType::Null => "/N".to_string(),
+            MetaType::Business => "B".to_string(),
+            MetaType::System => "S".to_string(),
+            MetaType::Dynamic => "D".to_string(),
+            MetaType::Null => "N".to_string(),
+            MetaType::Multi => "M".to_string(),
         }
     }
 
     pub fn from_prefix(prefix: &str) -> Result<Self> {
         match prefix {
-            "/B" => Ok(MetaType::Business),
-            "/S" => Ok(MetaType::System),
-            "/D" => Ok(MetaType::Dynamic),
-            "/N" => Ok(MetaType::Null),
+            "B" => Ok(MetaType::Business),
+            "S" => Ok(MetaType::System),
+            "D" => Ok(MetaType::Dynamic),
+            "N" => Ok(MetaType::Null),
+            "M" => Ok(MetaType::Multi),
             _ => Err(NatureError::VerifyError("unknow prefix : [".to_string() + prefix + "]"))
         }
     }
 
     pub fn check_type(meta: &str, m_type: MetaType) -> Result<()> {
         let prefix = m_type.get_prefix();
-        let err = format!("meta string must begin with {}/", &prefix);
-        let err = Err(NatureError::VerifyError(err));
-        if meta.len() < 3 {
-            return err;
+        let parts: Vec<&str> = meta.split(PART_SEPARATOR).collect();
+        if parts.len() < 1 {
+            return Err(NatureError::VerifyError("No type found".to_string()));
         }
-        let x = &meta[0..2];
+        let x = parts[0];
         if x != format!("{}", &prefix) {
-            return err;
+            return Err(NatureError::VerifyError("type unmatched".to_string()));
         }
         Ok(())
     }
@@ -51,23 +59,25 @@ mod test {
 
     #[test]
     fn get_profix() {
-        assert_eq!("/N", MetaType::Null.get_prefix());
-        assert_eq!("/S", MetaType::System.get_prefix());
-        assert_eq!("/D", MetaType::Dynamic.get_prefix());
-        assert_eq!("/B", MetaType::Business.get_prefix());
+        assert_eq!("N", MetaType::Null.get_prefix());
+        assert_eq!("S", MetaType::System.get_prefix());
+        assert_eq!("D", MetaType::Dynamic.get_prefix());
+        assert_eq!("B", MetaType::Business.get_prefix());
+        assert_eq!("M", MetaType::Multi.get_prefix());
     }
 
     #[test]
     fn from_profix() {
-        assert_eq!(MetaType::Null, MetaType::from_prefix("/N").unwrap());
-        assert_eq!(MetaType::Business, MetaType::from_prefix("/B").unwrap());
-        assert_eq!(MetaType::System, MetaType::from_prefix("/S").unwrap());
-        assert_eq!(MetaType::Dynamic, MetaType::from_prefix("/D").unwrap());
+        assert_eq!(MetaType::Null, MetaType::from_prefix("N").unwrap());
+        assert_eq!(MetaType::Business, MetaType::from_prefix("B").unwrap());
+        assert_eq!(MetaType::System, MetaType::from_prefix("S").unwrap());
+        assert_eq!(MetaType::Dynamic, MetaType::from_prefix("D").unwrap());
+        assert_eq!(MetaType::Multi, MetaType::from_prefix("M").unwrap());
         assert_eq!(Err(NatureError::VerifyError("unknow prefix : [/d]".to_string())), MetaType::from_prefix("/d"));
     }
 
     #[test]
-    fn check_type_test(){
-        assert_eq!(Ok(()), MetaType::check_type("/D//dynamic/target/is/null:1", MetaType::Dynamic));
+    fn check_type_test() {
+        assert_eq!(Ok(()), MetaType::check_type("D:dynamic/target/is/null:1", MetaType::Dynamic));
     }
 }

@@ -6,7 +6,7 @@ use std::str::FromStr;
 
 use chrono::prelude::*;
 
-use crate::{generate_id, NatureError, ParaForQueryByID, Result, TargetState, FromInstance};
+use crate::{FromInstance, generate_id, MetaType, NatureError, ParaForQueryByID, PART_SEPARATOR, Result, TargetState};
 use crate::converter::DynamicConverter;
 
 use super::Meta;
@@ -35,7 +35,7 @@ impl Instance {
         Ok(Instance {
             id: 0,
             data: BizObject {
-                meta: format!("/B{}:1", key),
+                meta: format!("{}{}{}:1", MetaType::default().get_prefix(), PART_SEPARATOR, key),
                 content: "".to_string(),
                 context: HashMap::new(),
                 states: HashSet::new(),
@@ -61,11 +61,8 @@ impl Instance {
         if self.execute_time == 0 {
             self.execute_time = now;
         }
-        match self.para.is_empty() {
-            true => if self.id == 0 {
-                self.id = generate_id(&self.data)?;
-            }
-            _ => self.id = 0
+        if self.para.is_empty() && self.id == 0 {
+            self.id = generate_id(&self.data)?;
         }
         Ok(self)
     }
@@ -104,6 +101,10 @@ impl Instance {
                 Some(master) => Ok(dao(&ParaForQueryByID::new(self.id, &master))?)
             },
         }
+    }
+
+    pub fn get_unique(&self) -> String {
+        format!("{}{}{}", &self.meta, &self.id, &self.para)
     }
 }
 
@@ -172,8 +173,7 @@ impl BizObject {
 }
 
 
-
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
 pub struct SelfRouteInstance {
     pub instance: Instance,
     pub converter: Vec<DynamicConverter>,
@@ -207,7 +207,7 @@ mod test {
         assert_eq!(instance.execute_time, 0);
         assert_eq!(instance.create_time, 0);
         let _ = instance.check_and_revise(meta_cache, meta_getter);
-        assert_eq!(instance.id, 61240780657743859318321580345734237010);
+        assert_eq!(instance.id, 339588997148173757236197912387121387891);
         assert_eq!(instance.execute_time > 0, true);
         assert_eq!(instance.create_time > 0, true);
     }
@@ -249,9 +249,15 @@ mod test {
     #[test]
     fn instance_new_test() {
         let ins = Instance::new("hello").unwrap();
-        assert_eq!(ins.meta, "/B/hello:1");
+        assert_eq!(ins.meta, "B:hello:1");
         let ins = Instance::new("/hello").unwrap();
-        assert_eq!(ins.meta, "/B/hello:1");
+        assert_eq!(ins.meta, "B:hello:1");
+    }
+
+    #[test]
+    fn unique_id_test() {
+        let ins = Instance::new("hello").unwrap();
+        assert_eq!(ins.get_unique(), "B:hello:10");
     }
 
     fn meta_cache(m: &str, _: fn(&str) -> Result<String>) -> Result<Meta> {

@@ -1,11 +1,11 @@
 use std::str::FromStr;
 
-use crate::{is_zero, Result, SelfRouteInstance};
+use crate::{is_one_u32, is_zero, one_u32, Result, SelfRouteInstance};
 use crate::error::NatureError;
 
 use super::Instance;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum ConverterReturned {
     /// This will break process for ever.
     LogicalError(String),
@@ -30,17 +30,21 @@ impl Default for ConverterReturned {
 #[derive(Serialize, Deserialize)]
 pub struct ConverterParameter {
     pub from: Instance,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub last_state: Option<Instance>,
     /// This is used for callback
     pub task_id: Vec<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
     pub master: Option<Instance>,
+    /// settings which used by converter for dynamic behaviour
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(default)]
+    pub cfg: Option<String>,
 }
 
-pub trait ConverterTrait {
-    fn convert(para: ConverterParameter) -> ConverterReturned;
-}
-
-#[derive(Serialize, Deserialize, Debug, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
 pub struct DynamicConverter {
     /// Only `Dynamic` and `Null` target supported for security reason.
     pub to: Option<String>,
@@ -62,6 +66,7 @@ pub enum Protocol {
     Https,
     /// Nature will automatically implement the converter. it can't be used by user.
     Auto,
+    BuiltIn,
 }
 
 impl FromStr for Protocol {
@@ -73,6 +78,7 @@ impl FromStr for Protocol {
             "LOCALRUST" => Ok(Protocol::LocalRust),
             "HTTP" => Ok(Protocol::Http),
             "HTTPS" => Ok(Protocol::Https),
+            "BUILTIN" => Ok(Protocol::BuiltIn),
             _ => {
                 let msg = format!("unknown protocol : {}", s);
                 Err(NatureError::VerifyError(msg))
@@ -97,8 +103,8 @@ pub struct Executor {
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default)]
     pub group: String,
-    #[serde(skip_serializing_if = "is_one")]
-    #[serde(default = "one")]
+    #[serde(skip_serializing_if = "is_one_u32")]
+    #[serde(default = "one_u32")]
     pub proportion: u32,
 }
 
@@ -121,15 +127,6 @@ impl Executor {
         }
     }
 }
-
-/// This is only used for serialize
-#[allow(clippy::trivially_copy_pass_by_ref)]
-fn is_one(num: &u32) -> bool {
-    *num == 1
-}
-
-fn one() -> u32 { 1 }
-
 
 #[cfg(test)]
 mod test {

@@ -171,14 +171,14 @@ impl State {
     }
 }
 
-#[derive(Serialize, Deserialize, Default, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Default, Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub struct StatePath {
     pub is_mutex: bool,
     pub desc_seq: Vec<CheckType>,
 }
 
 /// tyep and it's position where it is in the path
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub enum CheckType {
     Normal(u16),
     Parent(u16),
