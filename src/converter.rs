@@ -105,7 +105,7 @@ pub struct Executor {
     pub group: String,
     #[serde(skip_serializing_if = "is_one_u32")]
     #[serde(default = "one_u32")]
-    pub proportion: u32,
+    pub weight: u32,
 }
 
 impl Executor {
@@ -114,7 +114,7 @@ impl Executor {
             protocol: Protocol::LocalRust,
             url: path.to_string(),
             group: "".to_string(),
-            proportion: 1,
+            weight: 1,
         }
     }
 
@@ -123,7 +123,7 @@ impl Executor {
             protocol: Protocol::Auto,
             url: "".to_string(),
             group: "".to_string(),
-            proportion: 1,
+            weight: 1,
         }
     }
 }
@@ -138,15 +138,15 @@ mod test {
             protocol: Protocol::LocalRust,
             url: "".to_string(),
             group: "".to_string(),
-            proportion: 1,
+            weight: 1,
         };
         let ewe_s = serde_json::to_string(&exe).unwrap();
         assert_eq!(ewe_s, "{\"protocol\":\"localRust\"}");
         let ewe_dw: Executor = serde_json::from_str(&ewe_s).unwrap();
         assert_eq!(ewe_dw, exe);
-        exe.proportion = 5;
+        exe.weight = 5;
         let ewe_s = serde_json::to_string(&exe).unwrap();
-        assert_eq!(ewe_s, "{\"protocol\":\"localRust\",\"proportion\":5}");
+        assert_eq!(ewe_s, "{\"protocol\":\"localRust\",\"weight\":5}");
         let ewe_dw: Executor = serde_json::from_str(&ewe_s).unwrap();
         assert_eq!(exe, ewe_dw);
     }
