@@ -38,6 +38,7 @@ impl Instance {
                 meta: format!("{}{}{}:1", MetaType::default().get_prefix(), PART_SEPARATOR, key),
                 content: "".to_string(),
                 context: HashMap::new(),
+                sys_context: HashMap::new(),
                 states: HashSet::new(),
                 state_version: 0,
                 from: None,
@@ -137,17 +138,10 @@ pub struct BizObject {
     pub meta: String,
     /// What contend in this instance for the `Meta`
     pub content: String,
-    /// Is a json for a `Map[key, value]` which contents other instance for other `Meta`'s.
-    /// `Nature` can transform those to `Instance`'s by flowing.
-    ///
-    /// # Key
-    ///
-    /// context name
-    ///
-    /// # Value
-    ///
-    /// json data for a `Instance`.
+    /// Is a json for a `Map[key, value]` which maybe used for next `Relation`
     pub context: HashMap<String, String>,
+    /// like `context` but is specified by Nature
+    pub sys_context: HashMap<String, String>,
     pub states: HashSet<String>,
     pub state_version: i32,
     pub from: Option<FromInstance>,
