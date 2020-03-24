@@ -12,7 +12,7 @@ use crate::converter::DynamicConverter;
 use super::Meta;
 
 // sys context define
-pub static CONTEXT_TARGET_INSTANCE_ID: &str = "sys.target";
+pub static CONTEXT_TARGET_INSTANCE_ID: &str = "target.id";
 
 /// A snapshot for a particular `Meta`
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
@@ -82,7 +82,7 @@ impl Instance {
     pub fn get_last_taget<DAO>(&self, target_meta: &str, dao: DAO) -> Result<Option<Instance>>
         where DAO: Fn(&ParaForQueryByID) -> Result<Option<Instance>>
     {
-        match self.context.get(&*CONTEXT_TARGET_INSTANCE_ID) {
+        match self.sys_context.get(&*CONTEXT_TARGET_INSTANCE_ID) {
             // context have target id
             Some(state_id) => {
                 let state_id = u128::from_str(state_id)?;
@@ -176,7 +176,7 @@ pub struct SelfRouteInstance {
 impl SelfRouteInstance {
     pub fn verify(&self) -> Result<()> {
         if self.converter.is_empty() {
-            return Err(NatureError::VerifyError("converter must not empty for dynamic convert!".to_string()));
+            return Err(NatureError::VerifyError("executor must not empty for dynamic convert!".to_string()));
         }
         Ok(())
     }
@@ -201,7 +201,7 @@ mod test {
         assert_eq!(instance.execute_time, 0);
         assert_eq!(instance.create_time, 0);
         let _ = instance.check_and_revise(meta_cache, meta_getter);
-        assert_eq!(instance.id, 339588997148173757236197912387121387891);
+        assert_eq!(instance.id, 114254582069594800752107518630727414033);
         assert_eq!(instance.execute_time > 0, true);
         assert_eq!(instance.create_time > 0, true);
     }

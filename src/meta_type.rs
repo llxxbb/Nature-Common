@@ -43,11 +43,15 @@ impl MetaType {
         let prefix = m_type.get_prefix();
         let parts: Vec<&str> = meta.split(PART_SEPARATOR).collect();
         if parts.len() < 1 {
-            return Err(NatureError::VerifyError("No type found".to_string()));
+            let msg = "meta type undefined";
+            warn!("{}", msg);
+            return Err(NatureError::VerifyError(msg.to_string()));
         }
         let x = parts[0];
         if x != format!("{}", &prefix) {
-            return Err(NatureError::VerifyError("type unmatched".to_string()));
+            let msg = format!("[{}]'s MetaType undefined", meta);
+            warn!("{}", msg);
+            return Err(NatureError::VerifyError(msg.to_string()));
         }
         Ok(())
     }

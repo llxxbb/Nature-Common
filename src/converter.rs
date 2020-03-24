@@ -10,7 +10,7 @@ pub enum ConverterReturned {
     /// This will break process for ever.
     LogicalError(String),
     /// This can quick finish the process, and retry later.
-    EnvError,
+    EnvError(String),
     /// No instance would be return.
     None,
     /// Tell `Nature` the task will be processed asynchronously, Nature will wait for seconds you assigned, and converter will callback to `Nature` later while result are ready.
