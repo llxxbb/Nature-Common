@@ -5,6 +5,9 @@ use crate::{is_one, is_zero, one};
 pub struct ParaForQueryByID {
     pub id: u128,
     pub meta: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default)]
+    pub para: String,
     #[serde(skip_serializing_if = "is_zero")]
     #[serde(default)]
     pub state_version_from: i32,
@@ -18,6 +21,7 @@ impl ParaForQueryByID {
         ParaForQueryByID {
             id,
             meta: meta.to_string(),
+            para: String::default(),
             state_version_from: 0,
             limit: 1,
         }
@@ -32,5 +36,6 @@ pub struct ParaForIDAndFrom {
     pub from_id: u128,
     pub from_meta: String,
     pub from_state_version: i32,
+    pub from_para: String,
 
 }

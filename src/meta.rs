@@ -269,6 +269,13 @@ impl Meta {
     pub fn get_setting(&self) -> Option<MetaSetting> {
         self.setting.clone()
     }
+
+    pub fn need_cache(&self) -> bool {
+        match self.get_setting() {
+            Some(setting) => setting.conflict_avoid,
+            None => false
+        }
+    }
 }
 
 

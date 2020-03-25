@@ -107,6 +107,10 @@ impl Instance {
     pub fn get_unique(&self) -> String {
         format!("{}{}{}", &self.meta, &self.id, &self.para)
     }
+
+    pub fn get_key(&self) -> String {
+        format!("{}|{}|{}|{}", self.meta, self.id, self.para, self.state_version)
+    }
 }
 
 
@@ -187,6 +191,10 @@ impl SelfRouteInstance {
             execute_time: 0,
             create_time: 0,
         }
+    }
+
+    pub fn get_key(&self) -> String {
+        self.instance.get_key()
     }
 }
 
