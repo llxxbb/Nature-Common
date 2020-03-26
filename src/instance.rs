@@ -86,7 +86,7 @@ impl Instance {
             // context have target id
             Some(state_id) => {
                 let state_id = u128::from_str(state_id)?;
-                dao(&ParaForQueryByID::new(state_id, &target_meta))
+                dao(&ParaForQueryByID::new(state_id, &target_meta, &String::default(), 0))
             }
             None => Ok(None),
         }
@@ -99,7 +99,7 @@ impl Instance {
             None => Ok(None),
             Some(setting) => match setting.master {
                 None => Ok(None),
-                Some(master) => Ok(dao(&ParaForQueryByID::new(self.id, &master))?)
+                Some(master) => Ok(dao(&ParaForQueryByID::new(self.id, &master, &self.para, 0))?)
             },
         }
     }
