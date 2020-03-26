@@ -2,3 +2,4 @@ Cargo.lock
 target/
 Nature-Common.iml
 .idea/
+output.log

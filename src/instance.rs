@@ -12,7 +12,7 @@ use crate::converter::DynamicConverter;
 use super::Meta;
 
 // sys context define
-pub static CONTEXT_TARGET_INSTANCE_ID: &str = "sys.target";
+pub static CONTEXT_TARGET_INSTANCE_ID: &str = "target.id";
 
 /// A snapshot for a particular `Meta`
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
@@ -38,6 +38,7 @@ impl Instance {
                 meta: format!("{}{}{}:1", MetaType::default().get_prefix(), PART_SEPARATOR, key),
                 content: "".to_string(),
                 context: HashMap::new(),
+                sys_context: HashMap::new(),
                 states: HashSet::new(),
                 state_version: 0,
                 from: None,
@@ -81,11 +82,11 @@ impl Instance {
     pub fn get_last_taget<DAO>(&self, target_meta: &str, dao: DAO) -> Result<Option<Instance>>
         where DAO: Fn(&ParaForQueryByID) -> Result<Option<Instance>>
     {
-        match self.context.get(&*CONTEXT_TARGET_INSTANCE_ID) {
+        match self.sys_context.get(&*CONTEXT_TARGET_INSTANCE_ID) {
             // context have target id
             Some(state_id) => {
                 let state_id = u128::from_str(state_id)?;
-                dao(&ParaForQueryByID::new(state_id, &target_meta))
+                dao(&ParaForQueryByID::new(state_id, &target_meta, &String::default(), 0))
             }
             None => Ok(None),
         }
@@ -98,13 +99,17 @@ impl Instance {
             None => Ok(None),
             Some(setting) => match setting.master {
                 None => Ok(None),
-                Some(master) => Ok(dao(&ParaForQueryByID::new(self.id, &master))?)
+                Some(master) => Ok(dao(&ParaForQueryByID::new(self.id, &master, &self.para, 0))?)
             },
         }
     }
 
     pub fn get_unique(&self) -> String {
         format!("{}{}{}", &self.meta, &self.id, &self.para)
+    }
+
+    pub fn get_key(&self) -> String {
+        format!("{}|{}|{}|{}", self.meta, self.id, self.para, self.state_version)
     }
 }
 
@@ -137,17 +142,10 @@ pub struct BizObject {
     pub meta: String,
     /// What contend in this instance for the `Meta`
     pub content: String,
-    /// Is a json for a `Map[key, value]` which contents other instance for other `Meta`'s.
-    /// `Nature` can transform those to `Instance`'s by flowing.
-    ///
-    /// # Key
-    ///
-    /// context name
-    ///
-    /// # Value
-    ///
-    /// json data for a `Instance`.
+    /// Is a json for a `Map[key, value]` which maybe used for next `Relation`
     pub context: HashMap<String, String>,
+    /// like `context` but is specified by Nature
+    pub sys_context: HashMap<String, String>,
     pub states: HashSet<String>,
     pub state_version: i32,
     pub from: Option<FromInstance>,
@@ -182,7 +180,7 @@ pub struct SelfRouteInstance {
 impl SelfRouteInstance {
     pub fn verify(&self) -> Result<()> {
         if self.converter.is_empty() {
-            return Err(NatureError::VerifyError("converter must not empty for dynamic convert!".to_string()));
+            return Err(NatureError::VerifyError("executor must not empty for dynamic convert!".to_string()));
         }
         Ok(())
     }
@@ -193,6 +191,10 @@ impl SelfRouteInstance {
             execute_time: 0,
             create_time: 0,
         }
+    }
+
+    pub fn get_key(&self) -> String {
+        self.instance.get_key()
     }
 }
 
@@ -207,7 +209,7 @@ mod test {
         assert_eq!(instance.execute_time, 0);
         assert_eq!(instance.create_time, 0);
         let _ = instance.check_and_revise(meta_cache, meta_getter);
-        assert_eq!(instance.id, 339588997148173757236197912387121387891);
+        assert_eq!(instance.id, 114254582069594800752107518630727414033);
         assert_eq!(instance.execute_time > 0, true);
         assert_eq!(instance.create_time > 0, true);
     }
