@@ -85,6 +85,7 @@ impl Instance {
         match self.sys_context.get(&*CONTEXT_TARGET_INSTANCE_ID) {
             // context have target id
             Some(state_id) => {
+                debug!("get last state for meta {}", target_meta);
                 let state_id = u128::from_str(state_id)?;
                 dao(&ParaForQueryByID::new(state_id, &target_meta, &String::default(), 0))
             }
