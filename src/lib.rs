@@ -5,6 +5,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate uuid;
+extern crate reqwest;
 
 pub use callback::*;
 pub use converter::*;
