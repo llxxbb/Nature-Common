@@ -117,7 +117,7 @@ impl Meta {
         Meta::new(x[1], version, meta_type)
     }
 
-    pub fn get<T, W>(meta_str: &str, meta_cache_getter: fn(&str, fn(&str) -> Result<T>) -> Result<W>, meta_getter: fn(&str) -> Result<T>) -> Result<W> {
+    pub fn get<T, W>(meta_str: &str, meta_cache_getter: fn(&str, &fn(&str) -> Result<T>) -> Result<W>, meta_getter: &fn(&str) -> Result<T>) -> Result<W> {
         let meta = meta_cache_getter(meta_str, meta_getter)?;
         Ok(meta)
     }
@@ -383,7 +383,7 @@ mod test {
         let setting = serde_json::to_string(&MetaSetting {
             is_state: false,
             master: Some("hello2".to_string()),
-            multi_meta: None,
+            multi_meta: vec![],
             conflict_avoid: false,
         }).unwrap();
         let rtn = m.set_setting(&setting);
@@ -397,7 +397,7 @@ mod test {
         let setting = serde_json::to_string(&MetaSetting {
             is_state: true,
             master: Some("hello2".to_string()),
-            multi_meta: None,
+            multi_meta: vec![],
             conflict_avoid: false,
         }).unwrap();
         let rtn = m.set_setting(&setting);
@@ -422,7 +422,7 @@ mod verify_test {
         let setting = serde_json::to_string(&MetaSetting {
             is_state: true,
             master: None,
-            multi_meta: None,
+            multi_meta: vec![],
             conflict_avoid: false,
         }).unwrap();
         let _ = meta.set_setting(&setting);

@@ -49,7 +49,7 @@ impl Instance {
         })
     }
 
-    pub fn check_and_revise<T, W>(&mut self, meta_cache_getter: fn(&str, fn(&str) -> Result<T>) -> Result<W>, meta_getter: fn(&str) -> Result<T>) -> Result<&mut Self> {
+    pub fn check_and_revise<T, W>(&mut self, meta_cache_getter: fn(&str, &fn(&str) -> Result<T>) -> Result<W>, meta_getter: &fn(&str) -> Result<T>) -> Result<&mut Self> {
         let _ = Meta::get(&self.meta, meta_cache_getter, meta_getter)?;
         self.revise()
     }
@@ -209,7 +209,8 @@ mod test {
         assert_eq!(instance.id, 0);
         assert_eq!(instance.execute_time, 0);
         assert_eq!(instance.create_time, 0);
-        let _ = instance.check_and_revise(meta_cache, meta_getter);
+        let m_g: fn(&str) -> Result<String> = meta_getter;
+        let _ = instance.check_and_revise(meta_cache, &m_g);
         assert_eq!(instance.id, 114254582069594800752107518630727414033);
         assert_eq!(instance.execute_time > 0, true);
         assert_eq!(instance.create_time > 0, true);
@@ -218,26 +219,29 @@ mod test {
     #[test]
     fn can_not_get_from_cache() {
         let mut instance = Instance::new("/err").unwrap();
-        fn cache<T, W>(_: &str, _: fn(&str) -> Result<T>) -> Result<W> {
+        fn cache<T, W>(_: &str, _: &fn(&str) -> Result<T>) -> Result<W> {
             Err(NatureError::VerifyError("cache error".to_string()))
         }
         fn getter<T>(_: &str) -> Result<T> {
             Err(NatureError::VerifyError("getter error".to_string()))
         }
-        let result = instance.check_and_revise::<String, String>(cache, getter);
+        let m_g: fn(&str) -> Result<String> = getter;
+        let result = instance.check_and_revise::<String, String>(cache, &m_g);
         assert!(result.is_err());
     }
 
     #[test]
     fn can_get_from_cache() {
         let mut instance = Instance::new("/ok").unwrap();
-        fn cache<T>(_: &str, _: fn(&str) -> Result<T>) -> Result<String> {
+        fn cache<T>(_: &str, _: &fn(&str) -> Result<T>) -> Result<String> {
             Ok("hello".to_string())
         }
         fn getter<T>(_: &str) -> Result<T> {
             Err(NatureError::VerifyError("getter error".to_string()))
         }
-        let result = instance.check_and_revise::<String, String>(cache, getter);
+        let m_g: fn(&str) -> Result<String> = getter;
+
+        let result = instance.check_and_revise::<String, String>(cache, &m_g);
         assert!(result.is_ok());
     }
 
@@ -263,7 +267,7 @@ mod test {
         assert_eq!(ins.get_unique(), "B:hello:10");
     }
 
-    fn meta_cache(m: &str, _: fn(&str) -> Result<String>) -> Result<Meta> {
+    fn meta_cache(m: &str, _: &fn(&str) -> Result<String>) -> Result<Meta> {
         Meta::from_string(m)
     }
 
