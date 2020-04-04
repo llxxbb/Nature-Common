@@ -8,6 +8,7 @@ pub struct FromInstance {
     #[serde(default)]
     pub para: String,
     #[serde(skip_serializing_if = "is_zero")]
+    #[serde(default)]
     pub state_version: i32,
 }
 
