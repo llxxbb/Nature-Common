@@ -1,4 +1,6 @@
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
+use std::collections::btree_map::BTreeMap;
+use std::str::FromStr;
 
 use crate::{CheckType, MetaSetting, State, StatePath};
 use crate::NatureError::VerifyError;
@@ -13,7 +15,7 @@ pub static PATH_SEPARATOR: char = '/';
 pub static PART_SEPARATOR: &str = ":";
 
 /// Business Metadata
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
 pub struct Meta {
     /// # Identify a `Meta`.
     ///
@@ -252,7 +254,7 @@ impl Meta {
     /// before call this to make sure states had initialized.
     pub fn set_setting(&mut self, settings: &str) -> Result<()> {
         if !settings.is_empty() {
-            let setting: MetaSetting = serde_json::from_str(settings)?;
+            let setting = MetaSetting::from_str(settings)?;
             if setting.is_state {
                 self.is_state = true;
             }
@@ -380,12 +382,12 @@ mod test {
     fn master_must_be_a_state_meta() {
         // error
         let mut m = Meta::new("hello", 1, MetaType::Business).unwrap();
-        let setting = serde_json::to_string(&MetaSetting {
+        let setting = MetaSetting {
             is_state: false,
             master: Some("hello2".to_string()),
-            multi_meta: vec![],
+            multi_meta: Default::default(),
             conflict_avoid: false,
-        }).unwrap();
+        }.to_json().unwrap();
         let rtn = m.set_setting(&setting);
         assert_eq!(rtn, Err(NatureError::VerifyError("[master] is only useful for state-meta".to_string())));
         // ok
@@ -394,12 +396,12 @@ mod test {
         assert_eq!(rtn, Ok(()));
         // ok
         let _ = m.set_states(None);
-        let setting = serde_json::to_string(&MetaSetting {
+        let setting = MetaSetting {
             is_state: true,
             master: Some("hello2".to_string()),
-            multi_meta: vec![],
+            multi_meta: Default::default(),
             conflict_avoid: false,
-        }).unwrap();
+        }.to_json().unwrap();
         let rtn = m.set_setting(&setting);
         assert_eq!(rtn, Ok(()));
     }
@@ -419,12 +421,12 @@ mod verify_test {
     #[test]
     fn none_states() {
         let mut meta = Meta::new("/hello", 1, MetaType::Business).unwrap();
-        let setting = serde_json::to_string(&MetaSetting {
+        let setting = MetaSetting {
             is_state: true,
             master: None,
-            multi_meta: vec![],
+            multi_meta: Default::default(),
             conflict_avoid: false,
-        }).unwrap();
+        }.to_json().unwrap();
         let _ = meta.set_setting(&setting);
         let set: Vec<String> = vec!["a".to_string()];
         let rtn = meta.check_state(&set);

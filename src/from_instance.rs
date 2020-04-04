@@ -1,10 +1,13 @@
-use crate::Instance;
+use crate::{Instance, is_zero};
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct FromInstance {
     pub id: u128,
     pub meta: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default)]
     pub para: String,
+    #[serde(skip_serializing_if = "is_zero")]
     pub state_version: i32,
 }
 
