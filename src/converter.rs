@@ -38,10 +38,10 @@ pub struct ConverterParameter {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub master: Option<Instance>,
-    /// settings which used by converter for dynamic behaviour
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// executor setting
+    #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default)]
-    pub cfg: Option<String>,
+    pub cfg: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq)]
@@ -108,6 +108,10 @@ pub struct Executor {
     #[serde(skip_serializing_if = "is_one_u32")]
     #[serde(default = "one_u32")]
     pub weight: u32,
+    /// A json string which resolved by executor itself
+    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(default)]
+    pub settings: String,
 }
 
 impl Executor {
@@ -117,6 +121,7 @@ impl Executor {
             url: path.to_string(),
             group: "".to_string(),
             weight: 1,
+            settings: "".to_string(),
         }
     }
 
@@ -126,6 +131,7 @@ impl Executor {
             url: "".to_string(),
             group: "".to_string(),
             weight: 1,
+            settings: "".to_string(),
         }
     }
 }
@@ -141,6 +147,7 @@ mod test {
             url: "".to_string(),
             group: "".to_string(),
             weight: 1,
+            settings: "".to_string(),
         };
         let ewe_s = serde_json::to_string(&exe).unwrap();
         assert_eq!(ewe_s, "{\"protocol\":\"localRust\"}");
