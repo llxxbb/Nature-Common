@@ -258,9 +258,6 @@ impl Meta {
             if setting.is_state {
                 self.is_state = true;
             }
-            if setting.master.is_some() && !self.is_state {
-                return Err(NatureError::VerifyError("[master] is only useful for state-meta".to_string()));
-            }
             self.setting = Some(setting);
         } else {
             self.setting = None;
@@ -376,34 +373,6 @@ mod test {
     fn meta_string_test() {
         let m = Meta::new("hello", 1, MetaType::Business).unwrap();
         assert_eq!(m.meta_string(), "B:hello:1");
-    }
-
-    #[test]
-    fn master_must_be_a_state_meta() {
-        // error
-        let mut m = Meta::new("hello", 1, MetaType::Business).unwrap();
-        let setting = MetaSetting {
-            is_state: false,
-            master: Some("hello2".to_string()),
-            multi_meta: Default::default(),
-            conflict_avoid: false,
-        }.to_json().unwrap();
-        let rtn = m.set_setting(&setting);
-        assert_eq!(rtn, Err(NatureError::VerifyError("[master] is only useful for state-meta".to_string())));
-        // ok
-        let _ = m.set_states(Some(vec![State::Normal("a".to_string())]));
-        let rtn = m.set_setting(&setting);
-        assert_eq!(rtn, Ok(()));
-        // ok
-        let _ = m.set_states(None);
-        let setting = MetaSetting {
-            is_state: true,
-            master: Some("hello2".to_string()),
-            multi_meta: Default::default(),
-            conflict_avoid: false,
-        }.to_json().unwrap();
-        let rtn = m.set_setting(&setting);
-        assert_eq!(rtn, Ok(()));
     }
 }
 
