@@ -102,6 +102,14 @@ mod test {
     use super::*;
 
     #[test]
+    fn master_test(){
+        let mut  set = MetaSettingTemp::default();
+        set.master = Some("B:from:1".to_string());
+        let result = serde_json::to_string(&set).unwrap();
+        assert_eq!(result,r#"{"master":"B:from:1"}"#)
+    }
+
+    #[test]
     fn check_multi_meta() {
         let mut set: BTreeSet<String> = BTreeSet::new();
         set.insert("B:a:1".to_string());
