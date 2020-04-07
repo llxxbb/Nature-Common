@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::{is_false, is_one_u32, is_zero, one_u32, Result, SelfRouteInstance};
+use crate::{is_false, is_zero, Result, SelfRouteInstance};
 use crate::error::NatureError;
 
 use super::Instance;
@@ -101,13 +101,6 @@ pub struct Executor {
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default)]
     pub url: String,
-    // many different Executor can reside in a group. which control the executor's opportunity to be executed
-    #[serde(skip_serializing_if = "String::is_empty")]
-    #[serde(default)]
-    pub group: String,
-    #[serde(skip_serializing_if = "is_one_u32")]
-    #[serde(default = "one_u32")]
-    pub weight: u32,
     /// A json string which resolved by executor itself
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default)]
@@ -119,8 +112,6 @@ impl Executor {
         Executor {
             protocol: Protocol::LocalRust,
             url: path.to_string(),
-            group: "".to_string(),
-            weight: 1,
             settings: "".to_string(),
         }
     }
@@ -129,8 +120,6 @@ impl Executor {
         Executor {
             protocol: Protocol::Auto,
             url: "".to_string(),
-            group: "".to_string(),
-            weight: 1,
             settings: "".to_string(),
         }
     }
@@ -141,22 +130,15 @@ mod test {
     use super::*;
 
     #[test]
-    fn serde_executor_with_option_weight() {
-        let mut exe = Executor {
+    fn serde_executor() {
+        let exe = Executor {
             protocol: Protocol::LocalRust,
             url: "".to_string(),
-            group: "".to_string(),
-            weight: 1,
             settings: "".to_string(),
         };
         let ewe_s = serde_json::to_string(&exe).unwrap();
         assert_eq!(ewe_s, "{\"protocol\":\"localRust\"}");
         let ewe_dw: Executor = serde_json::from_str(&ewe_s).unwrap();
         assert_eq!(ewe_dw, exe);
-        exe.weight = 5;
-        let ewe_s = serde_json::to_string(&exe).unwrap();
-        assert_eq!(ewe_s, "{\"protocol\":\"localRust\",\"weight\":5}");
-        let ewe_dw: Executor = serde_json::from_str(&ewe_s).unwrap();
-        assert_eq!(exe, ewe_dw);
     }
 }
