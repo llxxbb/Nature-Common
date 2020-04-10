@@ -22,7 +22,6 @@ impl Display for NatureError {
     }
 }
 
-
 impl From<serde_json::error::Error> for NatureError {
     fn from(e: serde_json::error::Error) -> Self {
         NatureError::VerifyError(e.to_string())
@@ -47,3 +46,14 @@ impl From<reqwest::Error> for NatureError {
     }
 }
 
+impl From<std::io::Error> for NatureError {
+    fn from(err: std::io::Error) -> Self {
+        NatureError::EnvironmentError(err.to_string())
+    }
+}
+
+impl From<r2d2::Error> for NatureError {
+    fn from(err: r2d2::Error) -> Self {
+        NatureError::EnvironmentError(err.to_string())
+    }
+}
