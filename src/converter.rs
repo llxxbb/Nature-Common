@@ -27,7 +27,7 @@ impl Default for ConverterReturned {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct ConverterParameter {
     pub from: Instance,
     #[serde(skip_serializing_if = "Option::is_none")]
