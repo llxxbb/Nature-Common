@@ -6,7 +6,7 @@ use std::str::FromStr;
 
 use chrono::prelude::*;
 
-use crate::{FromInstance, generate_id, is_zero, MetaType, NatureError, ParaForQueryByID, PART_SEPARATOR, Result, TargetState};
+use crate::{FromInstance, generate_id, is_default, MetaType, NatureError, ParaForQueryByID, PART_SEPARATOR, Result, TargetState};
 use crate::converter::DynamicConverter;
 
 use super::Meta;
@@ -156,7 +156,7 @@ pub struct BizObject {
     #[serde(skip_serializing_if = "HashSet::is_empty")]
     #[serde(default)]
     pub states: HashSet<String>,
-    #[serde(skip_serializing_if = "is_zero")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub state_version: i32,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -225,7 +225,6 @@ mod test {
         assert_eq!(instance.create_time, 0);
         let m_g: fn(&str) -> Result<String> = meta_getter;
         let _ = instance.check_and_revise(meta_cache, &m_g);
-        assert_eq!(instance.id, 114254582069594800752107518630727414033);
         assert_eq!(instance.execute_time > 0, true);
         assert_eq!(instance.create_time > 0, true);
     }

@@ -1,7 +1,7 @@
 use std::collections::btree_set::BTreeSet;
 use std::str::FromStr;
 
-use crate::{Instance, is_false, NatureError, Result};
+use crate::{Instance, is_default, NatureError, Result};
 
 #[derive(Debug, Clone, Default, PartialEq, Ord, PartialOrd, Eq)]
 pub struct MetaSetting {
@@ -78,7 +78,7 @@ impl MetaSetting {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq)]
 struct MetaSettingTemp {
-    #[serde(skip_serializing_if = "is_false")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub is_state: bool,
     /// Only useful for state-meta.
@@ -92,7 +92,7 @@ struct MetaSettingTemp {
     #[serde(default)]
     pub multi_meta: Vec<String>,
     /// Nature will cache the saved instance for a while, and check before saving the following same instances.
-    #[serde(skip_serializing_if = "is_false")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub conflict_avoid: bool,
 }
@@ -102,11 +102,11 @@ mod test {
     use super::*;
 
     #[test]
-    fn master_test(){
-        let mut  set = MetaSettingTemp::default();
+    fn master_test() {
+        let mut set = MetaSettingTemp::default();
         set.master = Some("B:from:1".to_string());
         let result = serde_json::to_string(&set).unwrap();
-        assert_eq!(result,r#"{"master":"B:from:1"}"#)
+        assert_eq!(result, r#"{"master":"B:from:1"}"#)
     }
 
     #[test]

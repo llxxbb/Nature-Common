@@ -1,4 +1,4 @@
-use crate::{FromInstance, Instance, is_one, is_zero, one};
+use crate::{FromInstance, Instance, is_default, is_one, one};
 
 /// used for query instance by id
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -8,7 +8,7 @@ pub struct ParaForQueryByID {
     #[serde(skip_serializing_if = "String::is_empty")]
     #[serde(default)]
     pub para: String,
-    #[serde(skip_serializing_if = "is_zero")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub state_version: i32,
     #[serde(skip_serializing_if = "is_one")]

@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::{is_false, is_zero, Result, SelfRouteInstance};
+use crate::{is_default, Result, SelfRouteInstance};
 use crate::error::NatureError;
 
 use super::Instance;
@@ -51,10 +51,10 @@ pub struct DynamicConverter {
     /// REST api for convert to `to`
     pub fun: Executor,
     /// use upstream's id as downstream's id.
-    #[serde(skip_serializing_if = "is_false")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub use_upstream_id: bool,
-    #[serde(skip_serializing_if = "is_zero")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub delay: i32,
 }

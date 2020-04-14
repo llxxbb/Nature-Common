@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 /// used for converter setting
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct TargetState {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]

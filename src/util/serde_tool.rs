@@ -1,5 +1,3 @@
-use crate::MetaType;
-
 /// This is only used for serialize
 pub fn is_one(num: &i32) -> bool {
     *num == 1
@@ -14,15 +12,25 @@ pub fn is_one_u32(num: &u32) -> bool {
 pub fn one_u32() -> u32 { 1 }
 
 
-/// This is only used for serialize
-pub fn is_zero(num: &i32) -> bool {
-    *num == 0
+pub fn is_default<T: Default + Eq>(val: &T) -> bool {
+    val.eq(&T::default())
 }
 
-pub fn is_false(val: &bool) -> bool {
-    !val.clone()
-}
+#[cfg(test)]
+mod test {
+    use crate::Instance;
 
-pub fn is_default_meta(meta: &MetaType) -> bool{
-    *meta == MetaType::Business
+    use super::*;
+
+    #[test]
+    fn test() {
+        assert_eq!(is_default(&0), true);
+        assert_eq!(is_default(&1), false);
+        assert_eq!(is_default(&false), true);
+        assert_eq!(is_default(&true), false);
+        let mut ins = Instance::default();
+        assert_eq!(is_default(&ins), true);
+        ins.para = "hello".to_string();
+        assert_eq!(is_default(&ins), false);
+    }
 }
