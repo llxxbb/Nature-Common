@@ -13,6 +13,8 @@ use super::Meta;
 
 // sys context define
 pub static CONTEXT_TARGET_INSTANCE_ID: &str = "target.id";
+pub static CONTEXT_SOURCE_PARA: &str = "source.para";
+pub static CONTEXT_SOURCE_PARA_PART: &str = "source.paraPART";
 
 /// A snapshot for a particular `Meta`
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
@@ -79,9 +81,11 @@ impl Instance {
         }
     }
 
-    pub fn get_last_taget<DAO>(&self, target_meta: &str, dao: DAO) -> Result<Option<Instance>>
+    /// get downstream instance through upstream instance
+    pub fn get_last_taget<DAO>(&self, target_meta: &str, para_part: &Vec<u8>, dao: DAO) -> Result<Option<Instance>>
         where DAO: Fn(&ParaForQueryByID) -> Result<Option<Instance>>
     {
+        // TODO para_part
         match self.sys_context.get(&*CONTEXT_TARGET_INSTANCE_ID) {
             // context have target id
             Some(state_id) => {
