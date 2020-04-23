@@ -1,13 +1,24 @@
 use crate::{DEFAULT_PARA_SEPARATOR, NatureError, Result};
 
+/// The Ok returned:
+/// - .0 : para
+/// - .1 : remained key
 pub fn get_para_and_key_from_para(para: &str, part: &Vec<u8>) -> Result<(String, String)> {
+    // handle empty
+    if part.len() == 0 {
+        return Ok((para.to_string(), para.to_string()));
+    }
     let sep: &str = &DEFAULT_PARA_SEPARATOR;
     let keys: Vec<&str> = para.split(&sep).collect();
     make_key_and_para(&keys, part, &sep)
 }
 
 /// key for instance'content, para for instance's para
+/// The Ok returned:
+/// - .0 : para
+/// - .1 : remained key
 pub fn make_key_and_para(keys: &Vec<&str>, k_index: &Vec<u8>, sep: &str) -> Result<(String, String)> {
+
     // make instance's para
     let mut p: Vec<&str> = vec![];
     for index in k_index {
@@ -47,5 +58,15 @@ mod test {
         let result = make_key_and_para(&keys, &idx, "-").unwrap();
         assert_eq!(result.0, "d-b");
         assert_eq!(result.1, "a-c-e");
+    }
+
+    #[test]
+    fn empty_para() {
+        let result = get_para_and_key_from_para("", &vec![]).unwrap();
+        assert_eq!(result.0, "");
+        assert_eq!(result.1, "");
+        let result = get_para_and_key_from_para("a,b,c", &vec![]).unwrap();
+        assert_eq!(result.0, "a,b,c");
+        assert_eq!(result.1, "a,b,c");
     }
 }
