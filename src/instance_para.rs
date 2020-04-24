@@ -6,7 +6,7 @@ use crate::{DEFAULT_PARA_SEPARATOR, NatureError, Result};
 pub fn get_para_and_key_from_para(para: &str, part: &Vec<u8>) -> Result<(String, String)> {
     // handle empty
     if part.len() == 0 {
-        return Ok((para.to_string(), para.to_string()));
+        return Ok(("".to_string(), "".to_string()));
     }
     let sep: &str = &DEFAULT_PARA_SEPARATOR;
     let keys: Vec<&str> = para.split(&sep).collect();
@@ -66,7 +66,7 @@ mod test {
         assert_eq!(result.0, "");
         assert_eq!(result.1, "");
         let result = get_para_and_key_from_para("a,b,c", &vec![]).unwrap();
-        assert_eq!(result.0, "a,b,c");
-        assert_eq!(result.1, "a,b,c");
+        assert_eq!(result.0, "");
+        assert_eq!(result.1, "");
     }
 }

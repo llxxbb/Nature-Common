@@ -13,8 +13,6 @@ use super::Meta;
 
 // sys context define
 pub static CONTEXT_TARGET_INSTANCE_ID: &str = "target.id";
-pub static CONTEXT_SOURCE_PARA: &str = "source.para";
-pub static CONTEXT_SOURCE_PARA_PART: &str = "source.paraPART";
 
 /// A snapshot for a particular `Meta`
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
