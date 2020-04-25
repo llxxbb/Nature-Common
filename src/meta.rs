@@ -275,6 +275,16 @@ impl Meta {
             None => false
         }
     }
+
+    pub fn check_master(&self, meta: &str) -> bool {
+        match self.get_setting() {
+            Some(setting) => match setting.master {
+                Some(master) => master.eq(meta),
+                None => false
+            }
+            None => false
+        }
+    }
 }
 
 
@@ -373,6 +383,22 @@ mod test {
     fn meta_string_test() {
         let m = Meta::new("hello", 1, MetaType::Business).unwrap();
         assert_eq!(m.meta_string(), "B:hello:1");
+    }
+
+    #[test]
+    fn check_master_test(){
+        let mut meta = Meta::default();
+        assert_eq!(meta.check_master(""), false);
+        assert_eq!(meta.check_master("abc"), false);
+        let mut setting = MetaSetting::default();
+        meta.setting = Some(setting.clone());
+        assert_eq!(meta.check_master(""), false);
+        assert_eq!(meta.check_master("abc"), false);
+        setting.master = Some("def".to_string());
+        meta.setting = Some(setting.clone());
+        assert_eq!(meta.check_master(""), false);
+        assert_eq!(meta.check_master("abc"), false);
+        assert_eq!(meta.check_master("def"), true);
     }
 }
 

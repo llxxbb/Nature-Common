@@ -2,11 +2,10 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::iter::Iterator;
 use std::ops::{Deref, DerefMut};
-use std::str::FromStr;
 
 use chrono::prelude::*;
 
-use crate::{FromInstance, generate_id, get_para_and_key_from_para, is_default, MetaType, NatureError, ParaForQueryByID, PART_SEPARATOR, Result, TargetState};
+use crate::{FromInstance, generate_id, is_default, MetaType, NatureError, ParaForQueryByID, PART_SEPARATOR, Result, TargetState};
 use crate::converter::DynamicConverter;
 
 use super::Meta;
@@ -76,22 +75,6 @@ impl Instance {
         match option {
             Some(_) => Err(NatureError::VerifyError("instances's meta must be same!".to_string())),
             None => Ok(())
-        }
-    }
-
-    /// get downstream instance through upstream instance
-    pub fn get_last_taget<DAO>(&self, target_meta: &str, para_part: &Vec<u8>, dao: DAO) -> Result<Option<Instance>>
-        where DAO: Fn(&ParaForQueryByID) -> Result<Option<Instance>>
-    {
-        let para_id = get_para_and_key_from_para(&self.para, para_part)?.0;
-        match self.sys_context.get(&*CONTEXT_TARGET_INSTANCE_ID) {
-            // context have target id
-            Some(state_id) => {
-                debug!("get last state for meta {}", target_meta);
-                let state_id = u128::from_str(state_id)?;
-                dao(&ParaForQueryByID::new(state_id, &target_meta, &para_id, 0))
-            }
-            None => Ok(None),
         }
     }
 
