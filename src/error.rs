@@ -2,8 +2,7 @@ use std;
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
-
-use actix::prelude::SendError;
+use std::sync::mpsc::SendError;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum NatureError {
