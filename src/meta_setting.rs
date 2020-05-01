@@ -15,8 +15,8 @@ pub struct MetaSetting {
     /// it would be good performance for multi_meta verify.
     /// each of the item's format is meta-type:business-key:version
     pub multi_meta: BTreeSet<String>,
-    /// Nature will cache the saved instance for a while, and check before saving the following same instances.
-    pub conflict_avoid: bool,
+    /// Nature will cache the saved instance for a while, this can increase performance greatly to save same instance, such as to generate a timer instance.
+    pub cache_saved: bool,
 }
 
 impl From<MetaSettingTemp> for MetaSetting {
@@ -29,7 +29,7 @@ impl From<MetaSettingTemp> for MetaSetting {
                 input.multi_meta.into_iter().for_each(|one| { rtn.insert(one); });
                 rtn
             },
-            conflict_avoid: input.conflict_avoid,
+            cache_saved: input.conflict_avoid,
         }
     }
 }
@@ -53,7 +53,7 @@ impl From<MetaSetting> for MetaSettingTemp {
                 input.multi_meta.into_iter().for_each(|one| { rtn.push(one); });
                 rtn
             },
-            conflict_avoid: input.conflict_avoid,
+            conflict_avoid: input.cache_saved,
         }
     }
 }
@@ -119,7 +119,7 @@ mod test {
             is_state: false,
             master: None,
             multi_meta: set,
-            conflict_avoid: false,
+            cache_saved: false,
         };
         let a = Instance::new("a").unwrap();
         let b = Instance::new("b").unwrap();

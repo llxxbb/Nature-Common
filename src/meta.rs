@@ -271,7 +271,7 @@ impl Meta {
 
     pub fn need_cache(&self) -> bool {
         match self.get_setting() {
-            Some(setting) => setting.conflict_avoid,
+            Some(setting) => setting.cache_saved,
             None => false
         }
     }
@@ -420,7 +420,7 @@ mod verify_test {
             is_state: true,
             master: None,
             multi_meta: Default::default(),
-            conflict_avoid: false,
+            cache_saved: false,
         }.to_json().unwrap();
         let _ = meta.set_setting(&setting);
         let set: Vec<String> = vec!["a".to_string()];
