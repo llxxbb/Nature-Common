@@ -19,8 +19,6 @@ pub struct Instance {
     /// A unique value used to distinguish other instance
     pub id: u128,
     pub data: BizObject,
-    /// The time which plan to flow for this instance
-    pub execute_time: i64,
     /// When this instance created in db
     pub create_time: i64,
 }
@@ -43,7 +41,6 @@ impl Instance {
                 from: None,
                 para: String::new(),
             },
-            execute_time: 0,
             create_time: 0,
         })
     }
@@ -57,9 +54,6 @@ impl Instance {
         let now = Local::now().timestamp_millis();
         if self.create_time == 0 {
             self.create_time = now;
-        }
-        if self.execute_time == 0 {
-            self.execute_time = now;
         }
         if self.para.is_empty() && self.id == 0 {
             self.id = generate_id(&self.data)?;
@@ -187,7 +181,6 @@ impl SelfRouteInstance {
         Instance {
             id: 0,
             data: self.instance.data.clone(),
-            execute_time: 0,
             create_time: 0,
         }
     }
@@ -205,11 +198,9 @@ mod test {
     fn revise_test() {
         let mut instance = Instance::new("hello").unwrap();
         assert_eq!(instance.id, 0);
-        assert_eq!(instance.execute_time, 0);
         assert_eq!(instance.create_time, 0);
         let m_g: fn(&str) -> Result<String> = meta_getter;
         let _ = instance.check_and_revise(meta_cache, &m_g);
-        assert_eq!(instance.execute_time > 0, true);
         assert_eq!(instance.create_time > 0, true);
     }
 
