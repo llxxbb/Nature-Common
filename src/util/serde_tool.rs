@@ -11,7 +11,6 @@ pub fn is_one_u32(num: &u32) -> bool {
 
 pub fn one_u32() -> u32 { 1 }
 
-
 pub fn is_default<T: Default + Eq>(val: &T) -> bool {
     val.eq(&T::default())
 }

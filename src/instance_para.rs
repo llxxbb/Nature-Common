@@ -69,4 +69,36 @@ mod test {
         assert_eq!(result.0, "");
         assert_eq!(result.1, "");
     }
+
+    #[test]
+    fn normal_test(){
+        let result = get_para_and_key_from_para("a/b/c", &vec![0]).unwrap();
+        assert_eq!(result.0, "a");
+        assert_eq!(result.1, "b/c");
+        let result = get_para_and_key_from_para("a/b/c", &vec![1]).unwrap();
+        assert_eq!(result.0, "b");
+        assert_eq!(result.1, "a/c");
+        let result = get_para_and_key_from_para("a/b/c", &vec![2]).unwrap();
+        assert_eq!(result.0, "c");
+        assert_eq!(result.1, "a/b");
+        let result = get_para_and_key_from_para("a/b/c", &vec![0,1]).unwrap();
+        assert_eq!(result.0, "a/b");
+        assert_eq!(result.1, "c");
+        let result = get_para_and_key_from_para("a/b/c", &vec![1,2]).unwrap();
+        assert_eq!(result.0, "b/c");
+        assert_eq!(result.1, "a");
+        let result = get_para_and_key_from_para("a/b/c", &vec![0,2]).unwrap();
+        assert_eq!(result.0, "a/c");
+        assert_eq!(result.1, "b");
+
+        let result = get_para_and_key_from_para("a/b/c", &vec![1,0]).unwrap();
+        assert_eq!(result.0, "b/a");
+        assert_eq!(result.1, "c");
+        let result = get_para_and_key_from_para("a/b/c", &vec![2,1]).unwrap();
+        assert_eq!(result.0, "c/b");
+        assert_eq!(result.1, "a");
+        let result = get_para_and_key_from_para("a/b/c", &vec![2,0]).unwrap();
+        assert_eq!(result.0, "c/a");
+        assert_eq!(result.1, "b");
+    }
 }
