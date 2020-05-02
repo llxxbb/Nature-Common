@@ -29,7 +29,7 @@ impl From<MetaSettingTemp> for MetaSetting {
                 input.multi_meta.into_iter().for_each(|one| { rtn.insert(one); });
                 rtn
             },
-            cache_saved: input.conflict_avoid,
+            cache_saved: input.cache_saved,
         }
     }
 }
@@ -53,7 +53,7 @@ impl From<MetaSetting> for MetaSettingTemp {
                 input.multi_meta.into_iter().for_each(|one| { rtn.push(one); });
                 rtn
             },
-            conflict_avoid: input.cache_saved,
+            cache_saved: input.cache_saved,
         }
     }
 }
@@ -94,7 +94,7 @@ struct MetaSettingTemp {
     /// Nature will cache the saved instance for a while, and check before saving the following same instances.
     #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
-    pub conflict_avoid: bool,
+    pub cache_saved: bool,
 }
 
 #[cfg(test)]
@@ -133,5 +133,13 @@ mod test {
         assert_eq!(ms.check_multi_meta(&vec![b.clone(), c.clone()]).is_err(), true);
         assert_eq!(ms.check_multi_meta(&vec![c.clone(), b.clone()]).is_err(), true);
         assert_eq!(ms.check_multi_meta(&vec![a, b, c]).is_err(), true);
+    }
+
+    #[test]
+    fn cache_saved_test(){
+        let setting = r#"{"cache_saved":true}"#;
+        let result: MetaSettingTemp = serde_json::from_str(&setting).unwrap();
+        let result = MetaSetting::from(result);
+        assert_eq!(result.cache_saved, true);
     }
 }

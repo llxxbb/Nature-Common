@@ -84,10 +84,6 @@ impl Instance {
         }
     }
 
-    pub fn get_unique(&self) -> String {
-        format!("{}{}{}", &self.meta, &self.id, &self.para)
-    }
-
     pub fn get_key(&self) -> String {
         format!("{}|{}|{}|{}", self.meta, self.id, self.para, self.state_version)
     }
@@ -247,12 +243,6 @@ mod test {
         assert_eq!(ins.meta, "B:hello:1");
         let ins = Instance::new("/hello").unwrap();
         assert_eq!(ins.meta, "B:hello:1");
-    }
-
-    #[test]
-    fn unique_id_test() {
-        let ins = Instance::new("hello").unwrap();
-        assert_eq!(ins.get_unique(), "B:hello:10");
     }
 
     fn meta_cache(m: &str, _: &fn(&str) -> Result<String>) -> Result<Meta> {
