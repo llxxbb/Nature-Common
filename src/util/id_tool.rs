@@ -31,9 +31,10 @@ pub fn vec_to_hex_string(vec: &[u8]) -> String {
     vec.iter().format_with("", |e, f| f(&format_args!("{:02x}", e))).to_string()
 }
 
+
 #[cfg(test)]
 mod test {
-    use crate::util::id_tool::vec_to_hex_string;
+    use super::*;
 
     #[test]
     fn vec_to_hex_string_test() {
@@ -41,5 +42,16 @@ mod test {
         assert_eq!(string, "01020310");
         let string = vec_to_hex_string(&vec!(1, 2, 3, 15));
         assert_eq!(string, "0102030f");
+    }
+
+    #[test]
+    fn u128_2_hex_str(){
+        let result = generate_id("str").unwrap();
+        let string1 = format!("{:x}", result);
+        let string2 = format!("{:#x}", result);
+        dbg!(&string1);
+        dbg!(&string2);
+        let radix = u128::from_str_radix(&string1, 16).unwrap();
+        assert_eq!(result, radix);
     }
 }

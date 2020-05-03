@@ -1,4 +1,4 @@
-use crate::{PART_SEPARATOR, Result};
+use crate::{SEPARATOR_META, Result};
 use crate::error::NatureError;
 
 /// Every `Meta` must have a type
@@ -41,7 +41,7 @@ impl MetaType {
 
     pub fn check_type(meta: &str, m_type: MetaType) -> Result<()> {
         let prefix = m_type.get_prefix();
-        let parts: Vec<&str> = meta.split(PART_SEPARATOR).collect();
+        let parts: Vec<&str> = meta.split(&*SEPARATOR_META).collect();
         if parts.len() < 1 {
             let msg = "meta type undefined";
             warn!("{}", msg);

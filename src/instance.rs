@@ -5,7 +5,7 @@ use std::ops::{Deref, DerefMut};
 
 use chrono::prelude::*;
 
-use crate::{FromInstance, generate_id, is_default, MetaType, NatureError, ParaForQueryByID, PART_SEPARATOR, Result, TargetState};
+use crate::{FromInstance, generate_id, is_default, MetaType, NatureError, QueryByID, Result, SEPARATOR_INS_KEY, SEPARATOR_META, TargetState};
 use crate::converter::DynamicConverter;
 
 use super::Meta;
@@ -32,7 +32,7 @@ impl Instance {
         Ok(Instance {
             id: 0,
             data: BizObject {
-                meta: format!("{}{}{}:1", MetaType::default().get_prefix(), PART_SEPARATOR, key),
+                meta: format!("{}{}{}{}1", MetaType::default().get_prefix(), *SEPARATOR_META, key, *SEPARATOR_META),
                 content: "".to_string(),
                 context: HashMap::new(),
                 sys_context: HashMap::new(),
@@ -73,19 +73,25 @@ impl Instance {
     }
 
     pub fn get_master<ID>(&self, self_meta: &Meta, dao: ID) -> Result<Option<Instance>>
-        where ID: Fn(&ParaForQueryByID) -> Result<Option<Instance>>
+        where ID: Fn(&QueryByID) -> Result<Option<Instance>>
     {
         match self_meta.get_setting() {
             None => Ok(None),
             Some(setting) => match setting.master {
                 None => Ok(None),
-                Some(master) => Ok(dao(&ParaForQueryByID::new(self.id, &master, &self.para, 0))?)
+                Some(master) => Ok(dao(&QueryByID::new(self.id, &master, &self.para, 0))?)
             },
         }
     }
 
     pub fn get_key(&self) -> String {
-        format!("{}|{}|{}|{}", self.meta, self.id, self.para, self.state_version)
+        let sep: &str = &*SEPARATOR_INS_KEY;
+        format!("{}{}{:x}{}{}{}{}", self.meta, sep, self.id, sep, self.para, sep, self.state_version)
+    }
+
+    pub fn key_no_state(&self) -> String {
+        let sep: &str = &*SEPARATOR_INS_KEY;
+        format!("{}{}{:x}{}{}", self.meta, sep, self.id, sep, self.para)
     }
 }
 

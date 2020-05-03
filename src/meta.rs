@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::collections::btree_map::BTreeMap;
 use std::str::FromStr;
 
-use crate::{CheckType, MetaSetting, State, StatePath};
+use crate::{CheckType, MetaSetting, SEPARATOR_META, SEPARATOR_META_KEY, State, StatePath};
 use crate::NatureError::VerifyError;
 use crate::state::States;
 
@@ -11,8 +11,6 @@ use super::NatureError;
 use super::Result;
 
 /// separator for `Meta`'s key
-pub static PATH_SEPARATOR: char = '/';
-pub static PART_SEPARATOR: &str = ":";
 
 /// Business Metadata
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
@@ -47,7 +45,7 @@ impl Default for Meta {
             is_state: false,
             setting: None,
             check_list: Default::default(),
-            meta: full_key + PART_SEPARATOR + &1.to_string(),
+            meta: full_key + &*SEPARATOR_META + &1.to_string(),
         }
     }
 }
@@ -56,17 +54,17 @@ impl Meta {
     /// make start with "/" and remove "/" at the end
     pub fn key_standardize(biz: &str) -> Result<String> {
         let mut biz = biz.to_string();
-        if biz.ends_with(PATH_SEPARATOR) {
+        if biz.ends_with(&*SEPARATOR_META_KEY) {
             let last = biz.len() - 1;
             biz.remove(last);
         }
-        if biz.starts_with(PATH_SEPARATOR) {
+        if biz.starts_with(&*SEPARATOR_META_KEY) {
             biz = biz[1..].to_string();
         }
         if biz.is_empty() {
             return Err(NatureError::VerifyError("key length can't be zero".to_string()));
         }
-        if biz.contains(PART_SEPARATOR) {
+        if biz.contains(&*SEPARATOR_META) {
             return Err(NatureError::VerifyError("key can not contains [:] character".to_string()));
         }
         Ok(biz)
@@ -86,7 +84,7 @@ impl Meta {
             is_state: false,
             setting: None,
             check_list: Default::default(),
-            meta: prefix + PART_SEPARATOR + &key + PART_SEPARATOR + &version.to_string(),
+            meta: prefix + &*SEPARATOR_META + &key + &*SEPARATOR_META + &version.to_string(),
         })
     }
 
@@ -99,12 +97,12 @@ impl Meta {
     }
     pub fn set_meta_type(&mut self, meta_type: MetaType) {
         self.meta_type = meta_type.clone();
-        self.meta = meta_type.get_prefix() + &self.key + PART_SEPARATOR + &1.to_string()
+        self.meta = meta_type.get_prefix() + &self.key + &*SEPARATOR_META + &1.to_string()
     }
 
     /// `meta_str`'s format : [MetaType]:[key]:[version]
     pub fn from_string(meta_str: &str) -> Result<Meta> {
-        let x: Vec<&str> = meta_str.split(PART_SEPARATOR).collect();
+        let x: Vec<&str> = meta_str.split(&*SEPARATOR_META).collect();
         if x.len() != 3 {
             return Err(NatureError::VerifyError("format should be [MetaType]:[key]:[version]".to_string()));
         }
@@ -386,7 +384,7 @@ mod test {
     }
 
     #[test]
-    fn check_master_test(){
+    fn check_master_test() {
         let mut meta = Meta::default();
         assert_eq!(meta.check_master(""), false);
         assert_eq!(meta.check_master("abc"), false);

@@ -1,4 +1,6 @@
-use crate::{Instance, is_default};
+use std::str::FromStr;
+
+use crate::{Instance, is_default, NatureError, Result, SEPARATOR_INS_KEY};
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct FromInstance {
@@ -13,8 +15,18 @@ pub struct FromInstance {
 }
 
 impl FromInstance {
-    pub fn get_upstream(&self) -> String {
-        format!("{}:{}:{}", self.meta, self.id, self.state_version)
+    pub fn from_key_no_state(key: &str) -> Result<Self> {
+        let part: Vec<&str> = key.split(&*SEPARATOR_INS_KEY).collect();
+        if part.len() != 3 {
+            return Err(NatureError::VerifyError("format error".to_string()));
+        }
+        let rtn = FromInstance {
+            id: u128::from_str_radix(part[1], 16)?,
+            meta: part[0].to_string(),
+            para: part[2].to_string(),
+            state_version: 0,
+        };
+        Ok(rtn)
     }
 }
 
@@ -26,5 +38,45 @@ impl From<&Instance> for FromInstance {
             para: from.para.clone(),
             state_version: from.state_version,
         }
+    }
+}
+
+impl FromStr for FromInstance {
+    type Err = NatureError;
+
+    fn from_str(s: &str) -> Result<Self> {
+        let part: Vec<&str> = s.split(&*SEPARATOR_INS_KEY).collect();
+        if part.len() != 4 {
+            let msg = format!("FromInstance::from_str : error input [{}]", s);
+            return Err(NatureError::VerifyError(msg));
+        }
+        let rtn = FromInstance {
+            id: u128::from_str_radix(part[1], 16)?,
+            meta: part[0].to_string(),
+            para: part[2].to_string(),
+            state_version: i32::from_str(part[3])?,
+        };
+        Ok(rtn)
+    }
+}
+
+impl ToString for FromInstance {
+    fn to_string(&self) -> String {
+        let sep: &str = &*SEPARATOR_INS_KEY;
+        format!("{}{}{:x}{}{}{}{}", self.meta, sep, self.id, sep, self.para, sep, self.state_version)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn to_string_test() {
+        let from = FromInstance::default();
+        let string = from.to_string();
+        assert_eq!(string, "|0||0");
+        let rtn = FromInstance::from_str(&string).unwrap();
+        assert_eq!(from, rtn);
     }
 }

@@ -1,4 +1,4 @@
-use crate::{DEFAULT_PARA_SEPARATOR, NatureError, Result};
+use crate::{SEPARATOR_INS_PARA, NatureError, Result};
 
 /// The Ok returned:
 /// - .0 : para
@@ -8,7 +8,7 @@ pub fn get_para_and_key_from_para(para: &str, part: &Vec<u8>) -> Result<(String,
     if part.len() == 0 {
         return Ok(("".to_string(), "".to_string()));
     }
-    let sep: &str = &DEFAULT_PARA_SEPARATOR;
+    let sep: &str = &SEPARATOR_INS_PARA;
     let keys: Vec<&str> = para.split(&sep).collect();
     make_key_and_para(&keys, part, &sep)
 }
