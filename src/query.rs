@@ -2,7 +2,7 @@ use crate::{FromInstance, Instance, is_default, is_one, one, SEPARATOR_INS_KEY};
 
 /// used for query instance by id
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct QueryByID {
+pub struct ByID {
     pub id: String,
     pub meta: String,
     #[serde(skip_serializing_if = "String::is_empty")]
@@ -16,9 +16,9 @@ pub struct QueryByID {
     pub limit: i32,
 }
 
-impl QueryByID {
+impl ByID {
     pub fn new(id: u128, meta: &str, para: &str, state_version: i32) -> Self {
-        QueryByID {
+        ByID {
             id: format!("{:x}", id),
             meta: meta.to_string(),
             para: para.to_string(),
@@ -36,9 +36,9 @@ impl QueryByID {
     }
 }
 
-impl From<&Instance> for QueryByID {
+impl From<&Instance> for ByID {
     fn from(input: &Instance) -> Self {
-        QueryByID {
+        ByID {
             id: format!("{:x}", input.id),
             meta: input.meta.to_string(),
             para: input.para.to_string(),
@@ -48,9 +48,9 @@ impl From<&Instance> for QueryByID {
     }
 }
 
-impl From<&FromInstance> for QueryByID {
+impl From<&FromInstance> for ByID {
     fn from(input: &FromInstance) -> Self {
-        QueryByID {
+        ByID {
             id: format!("{:x}", input.id),
             meta: input.meta.to_string(),
             para: input.para.to_string(),
@@ -62,13 +62,13 @@ impl From<&FromInstance> for QueryByID {
 
 /// used for query instance by id
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct ParaForIDAndFrom {
+pub struct IDAndFrom {
     pub id: u128,
     pub meta: String,
     pub from_key: String,
 }
 
-impl ParaForIDAndFrom {
+impl IDAndFrom {
     pub fn para_like(&self) -> String {
         format!("{}|{:x}|%", self.meta, self.id)
     }

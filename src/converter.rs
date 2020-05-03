@@ -34,7 +34,7 @@ pub struct ConverterParameter {
     #[serde(default)]
     pub last_state: Option<Instance>,
     /// This is used for callback
-    pub task_id: Vec<u8>,
+    pub task_id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(default)]
     pub master: Option<Instance>,
