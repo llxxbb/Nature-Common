@@ -5,7 +5,7 @@ use std::ops::{Deref, DerefMut};
 
 use chrono::prelude::*;
 
-use crate::{FromInstance, generate_id, is_default, MetaType, NatureError, ByID, Result, SEPARATOR_INS_KEY, SEPARATOR_META, TargetState};
+use crate::{FromInstance, generate_id, is_default, MetaType, NatureError, KeyCondition, Result, SEPARATOR_INS_KEY, SEPARATOR_META, TargetState};
 use crate::converter::DynamicConverter;
 
 use super::Meta;
@@ -73,13 +73,13 @@ impl Instance {
     }
 
     pub fn get_master<ID>(&self, self_meta: &Meta, dao: ID) -> Result<Option<Instance>>
-        where ID: Fn(&ByID) -> Result<Option<Instance>>
+        where ID: Fn(&KeyCondition) -> Result<Option<Instance>>
     {
         match self_meta.get_setting() {
             None => Ok(None),
             Some(setting) => match setting.master {
                 None => Ok(None),
-                Some(master) => Ok(dao(&ByID::new(self.id, &master, &self.para, 0))?)
+                Some(master) => Ok(dao(&KeyCondition::new(self.id, &master, &self.para, 0))?)
             },
         }
     }

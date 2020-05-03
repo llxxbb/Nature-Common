@@ -2,10 +2,13 @@ use crate::{FromInstance, Instance, is_default, is_one, one, SEPARATOR_INS_KEY};
 
 /// used for query instance by id
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub struct ByID {
+pub struct KeyCondition {
     pub id: String,
     pub meta: String,
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "is_default")]
+    #[serde(default)]
+    pub gt_key: String,
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub para: String,
     #[serde(skip_serializing_if = "is_default")]
@@ -16,15 +19,20 @@ pub struct ByID {
     pub limit: i32,
 }
 
-impl ByID {
+impl KeyCondition {
     pub fn new(id: u128, meta: &str, para: &str, state_version: i32) -> Self {
-        ByID {
+        KeyCondition {
             id: format!("{:x}", id),
             meta: meta.to_string(),
+            gt_key: "".to_string(),
             para: para.to_string(),
             state_version,
             limit: 1,
         }
+    }
+    pub fn id_like(&self) -> String {
+        let sep: &str = &*SEPARATOR_INS_KEY;
+        format!("{}{}%", self.meta, sep)
     }
     pub fn para_like(&self) -> String {
         let sep: &str = &*SEPARATOR_INS_KEY;
@@ -36,11 +44,12 @@ impl ByID {
     }
 }
 
-impl From<&Instance> for ByID {
+impl From<&Instance> for KeyCondition {
     fn from(input: &Instance) -> Self {
-        ByID {
+        KeyCondition {
             id: format!("{:x}", input.id),
             meta: input.meta.to_string(),
+            gt_key: "".to_string(),
             para: input.para.to_string(),
             state_version: input.state_version,
             limit: 1,
@@ -48,11 +57,12 @@ impl From<&Instance> for ByID {
     }
 }
 
-impl From<&FromInstance> for ByID {
+impl From<&FromInstance> for KeyCondition {
     fn from(input: &FromInstance) -> Self {
-        ByID {
+        KeyCondition {
             id: format!("{:x}", input.id),
             meta: input.meta.to_string(),
+            gt_key: "".to_string(),
             para: input.para.to_string(),
             state_version: input.state_version,
             limit: 1,
