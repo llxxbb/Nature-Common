@@ -59,12 +59,13 @@ impl From<MetaSetting> for MetaSettingTemp {
 }
 
 impl MetaSetting {
-    pub fn check_multi_meta(&self, instances: &Vec<Instance>) -> Result<()> {
+    pub fn check_multi_meta(&self, instances: &mut Vec<Instance>) -> Result<()> {
         for instance in instances {
             if !self.multi_meta.contains(&instance.meta) {
                 let msg = format!("undefined meta:{} ", instance.meta);
                 return Err(NatureError::VerifyError(msg));
             }
+            instance.revise()?;
         }
         Ok(())
     }
@@ -124,15 +125,15 @@ mod test {
         let a = Instance::new("a").unwrap();
         let b = Instance::new("b").unwrap();
         let c = Instance::new("d").unwrap();
-        assert_eq!(ms.check_multi_meta(&vec![a.clone()]).is_ok(), true);
-        assert_eq!(ms.check_multi_meta(&vec![b.clone()]).is_ok(), true);
-        assert_eq!(ms.check_multi_meta(&vec![a.clone(), b.clone()]).is_ok(), true);
-        assert_eq!(ms.check_multi_meta(&vec![c.clone()]).is_err(), true);
-        assert_eq!(ms.check_multi_meta(&vec![c.clone(), a.clone()]).is_err(), true);
-        assert_eq!(ms.check_multi_meta(&vec![a.clone(), c.clone()]).is_err(), true);
-        assert_eq!(ms.check_multi_meta(&vec![b.clone(), c.clone()]).is_err(), true);
-        assert_eq!(ms.check_multi_meta(&vec![c.clone(), b.clone()]).is_err(), true);
-        assert_eq!(ms.check_multi_meta(&vec![a, b, c]).is_err(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![a.clone()]).is_ok(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![b.clone()]).is_ok(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![a.clone(), b.clone()]).is_ok(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![c.clone()]).is_err(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![c.clone(), a.clone()]).is_err(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![a.clone(), c.clone()]).is_err(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![b.clone(), c.clone()]).is_err(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![c.clone(), b.clone()]).is_err(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![a, b, c]).is_err(), true);
     }
 
     #[test]
