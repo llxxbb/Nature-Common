@@ -7,13 +7,19 @@ pub struct KeyCondition {
     pub meta: String,
     #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
-    pub gt_key: String,
+    pub key_gt: String,
     #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub para: String,
     #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub state_version: i32,
+    #[serde(skip_serializing_if = "is_default")]
+    #[serde(default)]
+    pub time_ge: Option<i64>,
+    #[serde(skip_serializing_if = "is_default")]
+    #[serde(default)]
+    pub time_lt: Option<i64>,
     #[serde(skip_serializing_if = "is_one")]
     #[serde(default = "one")]
     pub limit: i32,
@@ -24,9 +30,11 @@ impl KeyCondition {
         KeyCondition {
             id: format!("{:x}", id),
             meta: meta.to_string(),
-            gt_key: "".to_string(),
+            key_gt: "".to_string(),
             para: para.to_string(),
             state_version,
+            time_ge: None,
+            time_lt: None,
             limit: 1,
         }
     }
@@ -49,9 +57,11 @@ impl From<&Instance> for KeyCondition {
         KeyCondition {
             id: format!("{:x}", input.id),
             meta: input.meta.to_string(),
-            gt_key: "".to_string(),
+            key_gt: "".to_string(),
             para: input.para.to_string(),
             state_version: input.state_version,
+            time_ge: None,
+            time_lt: None,
             limit: 1,
         }
     }
@@ -62,9 +72,11 @@ impl From<&FromInstance> for KeyCondition {
         KeyCondition {
             id: format!("{:x}", input.id),
             meta: input.meta.to_string(),
-            gt_key: "".to_string(),
+            key_gt: "".to_string(),
             para: input.para.to_string(),
             state_version: input.state_version,
+            time_ge: None,
+            time_lt: None,
             limit: 1,
         }
     }
