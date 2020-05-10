@@ -5,7 +5,7 @@ use std::ops::{Deref, DerefMut};
 
 use chrono::prelude::*;
 
-use crate::{FromInstance, generate_id, is_default, MetaType, NatureError, KeyCondition, Result, SEPARATOR_INS_KEY, SEPARATOR_META, TargetState};
+use crate::{FromInstance, generate_id, is_default, KeyCondition, MetaType, NatureError, Result, SEPARATOR_INS_KEY, SEPARATOR_META, TargetState};
 use crate::converter::DynamicConverter;
 
 use super::Meta;
@@ -17,9 +17,13 @@ pub static CONTEXT_TARGET_INSTANCE_ID: &str = "target.id";
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct Instance {
     /// A unique value used to distinguish other instance
+    #[serde(skip_serializing_if = "is_default")]
+    #[serde(default)]
     pub id: u128,
     pub data: BizObject,
     /// When this instance created in db
+    #[serde(skip_serializing_if = "is_default")]
+    #[serde(default)]
     pub create_time: i64,
 }
 
@@ -249,6 +253,14 @@ mod test {
         assert_eq!(ins.meta, "B:hello:1");
         let ins = Instance::new("/hello").unwrap();
         assert_eq!(ins.meta, "B:hello:1");
+    }
+
+    #[test]
+    fn instance_json_test() {
+        let mut order = Instance::new("sale/order").unwrap();
+        order.data.content = "my order detail".to_string();
+        let rtn = serde_json::to_string(&order).unwrap();
+        assert_eq!(rtn, r#"{"data":{"meta":"B:sale/order:1","content":"my order detail"}}"#);
     }
 
     fn meta_cache(m: &str, _: &fn(&str) -> Result<String>) -> Result<Meta> {
