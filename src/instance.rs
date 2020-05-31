@@ -4,6 +4,7 @@ use std::iter::Iterator;
 use std::ops::{Deref, DerefMut};
 
 use chrono::prelude::*;
+use futures::Future;
 
 use crate::{FromInstance, generate_id, is_default, KeyCondition, MetaType, NatureError, Result, SEPARATOR_INS_KEY, SEPARATOR_META, TargetState};
 use crate::converter::DynamicConverter;
@@ -76,14 +77,19 @@ impl Instance {
         }
     }
 
-    pub fn get_master<ID>(&self, self_meta: &Meta, dao: ID) -> Result<Option<Instance>>
-        where ID: Fn(&KeyCondition) -> Result<Option<Instance>>
+    pub async fn get_master<'a, F, ID>(&self, self_meta: &Meta, dao: ID) -> Result<Option<Instance>>
+        where F: Future<Output=Result<Option<Instance>>>,
+              ID: Fn(KeyCondition) -> F
     {
         match self_meta.get_setting() {
             None => Ok(None),
             Some(setting) => match setting.master {
                 None => Ok(None),
-                Some(master) => Ok(dao(&KeyCondition::new(self.id, &master, &self.para, 0))?)
+                Some(master) => {
+                    let condition = KeyCondition::new(self.id, &master, &self.para, 0);
+                    let result = dao(condition);
+                    Ok(result.await?)
+                }
             },
         }
     }
