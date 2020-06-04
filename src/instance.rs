@@ -50,10 +50,6 @@ impl Instance {
         })
     }
 
-    pub fn check_and_revise<T, W>(&mut self, meta_cache_getter: fn(&str, &fn(&str) -> Result<T>) -> Result<W>, meta_getter: &fn(&str) -> Result<T>) -> Result<&mut Self> {
-        let _ = Meta::get(&self.meta, meta_cache_getter, meta_getter)?;
-        self.revise()
-    }
 
     pub fn revise(&mut self) -> Result<&mut Self> {
         let now = Local::now().timestamp_millis();
@@ -207,45 +203,6 @@ mod test {
     use super::*;
 
     #[test]
-    fn revise_test() {
-        let mut instance = Instance::new("hello").unwrap();
-        assert_eq!(instance.id, 0);
-        assert_eq!(instance.create_time, 0);
-        let m_g: fn(&str) -> Result<String> = meta_getter;
-        let _ = instance.check_and_revise(meta_cache, &m_g);
-        assert_eq!(instance.create_time > 0, true);
-    }
-
-    #[test]
-    fn can_not_get_from_cache() {
-        let mut instance = Instance::new("/err").unwrap();
-        fn cache<T, W>(_: &str, _: &fn(&str) -> Result<T>) -> Result<W> {
-            Err(NatureError::VerifyError("cache error".to_string()))
-        }
-        fn getter<T>(_: &str) -> Result<T> {
-            Err(NatureError::VerifyError("getter error".to_string()))
-        }
-        let m_g: fn(&str) -> Result<String> = getter;
-        let result = instance.check_and_revise::<String, String>(cache, &m_g);
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn can_get_from_cache() {
-        let mut instance = Instance::new("/ok").unwrap();
-        fn cache<T>(_: &str, _: &fn(&str) -> Result<T>) -> Result<String> {
-            Ok("hello".to_string())
-        }
-        fn getter<T>(_: &str) -> Result<T> {
-            Err(NatureError::VerifyError("getter error".to_string()))
-        }
-        let m_g: fn(&str) -> Result<String> = getter;
-
-        let result = instance.check_and_revise::<String, String>(cache, &m_g);
-        assert!(result.is_ok());
-    }
-
-    #[test]
     fn same_meta_test() {
         let vec1 = vec![Instance::new("hello").unwrap(), Instance::new("world").unwrap()];
         assert_eq!(Instance::meta_must_same(&vec1).is_err(), true);
@@ -267,14 +224,6 @@ mod test {
         order.data.content = "my order detail".to_string();
         let rtn = serde_json::to_string(&order).unwrap();
         assert_eq!(rtn, r#"{"data":{"meta":"B:sale/order:1","content":"my order detail"}}"#);
-    }
-
-    fn meta_cache(m: &str, _: &fn(&str) -> Result<String>) -> Result<Meta> {
-        Meta::from_string(m)
-    }
-
-    fn meta_getter(_: &str) -> Result<String> {
-        Ok("".to_string())
     }
 }
 
