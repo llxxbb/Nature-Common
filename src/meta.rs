@@ -117,11 +117,6 @@ impl Meta {
         Meta::new(x[1], version, meta_type)
     }
 
-    pub fn get<T, W>(meta_str: &str, meta_cache_getter: fn(&str, &fn(&str) -> Result<T>) -> Result<W>, meta_getter: &fn(&str) -> Result<T>) -> Result<W> {
-        let meta = meta_cache_getter(meta_str, meta_getter)?;
-        Ok(meta)
-    }
-
     pub fn has_state_name(&self, name: &str) -> bool {
         let option = self.check_list.get(name);
         option.is_some()
