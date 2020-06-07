@@ -4,6 +4,7 @@ use std::str::FromStr;
 use crate::{Instance, is_default, NatureError, Result};
 
 #[derive(Debug, Clone, Default, PartialEq, Ord, PartialOrd, Eq)]
+#[derive(Serialize, Deserialize)]
 pub struct MetaSetting {
     pub is_state: bool,
     /// Only useful for state-meta.
@@ -137,7 +138,7 @@ mod test {
     }
 
     #[test]
-    fn cache_saved_test(){
+    fn cache_saved_test() {
         let setting = r#"{"cache_saved":true}"#;
         let result: MetaSettingTemp = serde_json::from_str(&setting).unwrap();
         let result = MetaSetting::from(result);
