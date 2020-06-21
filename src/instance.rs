@@ -116,10 +116,26 @@ impl DerefMut for Instance {
     }
 }
 
+impl Into<KeyCondition> for Instance {
+    fn into(self) -> KeyCondition {
+        KeyCondition {
+            id: format!("{:x}", self.id),
+            meta: self.data.meta.to_string(),
+            key_gt: "".to_string(),
+            para: self.data.para.to_string(),
+            state_version: self.data.state_version,
+            time_ge: None,
+            time_lt: None,
+            limit: 1,
+        }
+    }
+}
+
 impl Iterator for Instance {
     type Item = Instance;
     fn next(&mut self) -> Option<Self::Item> {
-        Some(self.clone())
+        let rtn: &Instance = self;
+        Some(rtn.clone())
     }
 }
 
