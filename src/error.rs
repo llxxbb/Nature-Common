@@ -50,9 +50,3 @@ impl From<std::io::Error> for NatureError {
         NatureError::EnvironmentError(err.to_string())
     }
 }
-
-impl From<r2d2::Error> for NatureError {
-    fn from(err: r2d2::Error) -> Self {
-        NatureError::EnvironmentError(err.to_string())
-    }
-}

@@ -1,7 +1,7 @@
 use crate::{SEPARATOR_INS_PARA, NatureError, Result};
 
 /// The Ok returned:
-/// - .0 : para
+/// - .0 : selected
 /// - .1 : remained key
 pub fn get_para_and_key_from_para(para: &str, part: &Vec<u8>) -> Result<(String, String)> {
     // handle empty
@@ -15,7 +15,7 @@ pub fn get_para_and_key_from_para(para: &str, part: &Vec<u8>) -> Result<(String,
 
 /// key for instance'content, para for instance's para
 /// The Ok returned:
-/// - .0 : para
+/// - .0 : selected
 /// - .1 : remained key
 pub fn make_key_and_para(keys: &Vec<&str>, k_index: &Vec<u8>, sep: &str) -> Result<(String, String)> {
 
