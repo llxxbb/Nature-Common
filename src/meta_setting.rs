@@ -66,7 +66,6 @@ impl MetaSetting {
                 let msg = format!("undefined meta:{} ", instance.meta);
                 return Err(NatureError::VerifyError(msg));
             }
-            instance.revise()?;
         }
         Ok(())
     }
