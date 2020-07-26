@@ -15,6 +15,7 @@ pub use error::*;
 pub use from_instance::*;
 pub use instance::*;
 pub use instance_para::*;
+pub use loop_context::*;
 pub use meta_setting::*;
 pub use meta_type::*;
 pub use query::*;

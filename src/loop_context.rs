@@ -4,4 +4,5 @@ pub struct LoopContext {
     pub to: String,
     pub len: usize,
     pub page: usize,
+    pub cfg: String,
 }
