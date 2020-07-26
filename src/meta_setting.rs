@@ -61,6 +61,15 @@ impl From<MetaSetting> for MetaSettingTemp {
 
 impl MetaSetting {
     pub fn check_multi_meta(&self, instances: &mut Vec<Instance>) -> Result<()> {
+        // when has one then use it.
+        if self.multi_meta.len() == 1 {
+            let meta = self.multi_meta.iter().next().unwrap();
+            for instance in instances {
+                instance.meta = meta.to_string();
+            }
+            return Ok(());
+        }
+        // otherwise check each meta
         for instance in instances {
             if !self.multi_meta.contains(&instance.meta) {
                 let msg = format!("undefined meta:{} ", instance.meta);
@@ -134,6 +143,27 @@ mod test {
         assert_eq!(ms.check_multi_meta(&mut vec![b.clone(), c.clone()]).is_err(), true);
         assert_eq!(ms.check_multi_meta(&mut vec![c.clone(), b.clone()]).is_err(), true);
         assert_eq!(ms.check_multi_meta(&mut vec![a, b, c]).is_err(), true);
+    }
+
+    #[test]
+    fn set_meta_for_multi_meta() {
+        let mut set: BTreeSet<String> = BTreeSet::new();
+        set.insert("B:a:1".to_string());
+
+        let ms = MetaSetting {
+            is_state: false,
+            master: None,
+            multi_meta: set,
+            cache_saved: false,
+        };
+        let a = Instance::default();
+        let b = Instance::default();
+        let c = Instance::default();
+        let ins = &mut vec![a, b, c];
+        let _ = ms.check_multi_meta(ins);
+        assert_eq!("B:a:1", ins[0].meta);
+        assert_eq!("B:a:1", ins[1].meta);
+        assert_eq!("B:a:1", ins[2].meta);
     }
 
     #[test]
