@@ -15,7 +15,6 @@ pub use error::*;
 pub use from_instance::*;
 pub use instance::*;
 pub use instance_para::*;
-pub use loop_context::*;
 pub use meta_setting::*;
 pub use meta_type::*;
 pub use query::*;
@@ -40,7 +39,6 @@ mod callback;
 mod from_instance;
 mod settings;
 mod instance_para;
-mod loop_context;
 
 
 pub type Result<T> = std::result::Result<T, NatureError>;
