@@ -39,6 +39,7 @@ mod callback;
 mod from_instance;
 mod settings;
 mod instance_para;
+mod loop_context;
 
 
 pub type Result<T> = std::result::Result<T, NatureError>;
