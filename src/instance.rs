@@ -15,6 +15,7 @@ use super::Meta;
 pub static CONTEXT_TARGET_INSTANCE_ID: &str = "target.id";
 pub static CONTEXT_TARGET_INSTANCE_PARA: &str = "target.para";
 pub static CONTEXT_LOOP_NEXT: &str = "loop.next";
+pub static CONTEXT_LOOP_TASK: &str = "loop.task";
 pub static CONTEXT_LOOP_FINISHED: &str = "loop.finished";
 
 /// A snapshot for a particular `Meta`
