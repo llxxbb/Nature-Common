@@ -54,7 +54,6 @@ impl Instance {
         })
     }
 
-
     pub fn revise(&mut self) -> Result<&mut Self> {
         let now = Local::now().timestamp_millis();
         if self.create_time == 0 {
