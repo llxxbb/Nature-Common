@@ -151,27 +151,27 @@ pub struct BizObject {
     /// This instance's Type
     pub meta: String,
     /// What contend in this instance for the `Meta`
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub content: String,
     /// Is a json for a `Map[key, value]` which maybe used for next `Relation`
-    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub context: HashMap<String, String>,
     /// like `context` but is specified by Nature
-    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub sys_context: HashMap<String, String>,
-    #[serde(skip_serializing_if = "HashSet::is_empty")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub states: HashSet<String>,
     #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub state_version: i32,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub from: Option<FromInstance>,
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub para: String,
 }

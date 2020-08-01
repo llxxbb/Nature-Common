@@ -6,7 +6,7 @@ use crate::{Instance, is_default, NatureError, Result, SEPARATOR_INS_KEY};
 pub struct FromInstance {
     pub id: u128,
     pub meta: String,
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub para: String,
     #[serde(skip_serializing_if = "is_default")]

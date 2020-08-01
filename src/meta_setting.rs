@@ -94,11 +94,11 @@ struct MetaSettingTemp {
     /// Only useful for state-meta.
     /// A meta_string, this meta instance's id will use its master instance's id.
     /// As a target meta, if no `executor` appointed. an auto-converter will be created.
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub master: Option<String>,
     /// each of the item's format is meta-type:business-key:version
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub multi_meta: Vec<String>,
     /// Nature will cache the saved instance for a while, and check before saving the following same instances.

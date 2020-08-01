@@ -30,16 +30,16 @@ impl Default for ConverterReturned {
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ConverterParameter {
     pub from: Instance,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub last_state: Option<Instance>,
     /// This is used for callback
     pub task_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub master: Option<Instance>,
     /// executor setting
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub cfg: String,
 }
@@ -98,11 +98,11 @@ impl Default for Protocol {
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Ord, PartialOrd, Eq, Hash)]
 pub struct Executor {
     pub protocol: Protocol,
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub url: String,
     /// A json string which resolved by executor itself
-    #[serde(skip_serializing_if = "String::is_empty")]
+    #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub settings: String,
 }
