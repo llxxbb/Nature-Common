@@ -1,7 +1,7 @@
 use std::collections::btree_set::BTreeSet;
 use std::str::FromStr;
 
-use crate::{Instance, is_default, NatureError, Result};
+use crate::{Instance, is_default, NatureError, Result, FromInstance};
 
 #[derive(Debug, Clone, Default, PartialEq, Ord, PartialOrd, Eq)]
 #[derive(Serialize, Deserialize)]
@@ -60,12 +60,13 @@ impl From<MetaSetting> for MetaSettingTemp {
 }
 
 impl MetaSetting {
-    pub fn check_multi_meta(&self, instances: &mut Vec<Instance>) -> Result<()> {
+    pub fn check_multi_meta(&self, instances: &mut Vec<Instance>, from: &FromInstance) -> Result<()> {
         // when has one then use it.
         if self.multi_meta.len() == 1 {
             let meta = self.multi_meta.iter().next().unwrap();
             for instance in instances {
                 instance.meta = meta.to_string();
+                instance.from = Some(from.clone());
             }
             return Ok(());
         }
@@ -75,6 +76,7 @@ impl MetaSetting {
                 let msg = format!("undefined meta:{} ", instance.meta);
                 return Err(NatureError::VerifyError(msg));
             }
+            instance.from = Some(from.clone());
         }
         Ok(())
     }
@@ -134,15 +136,15 @@ mod test {
         let a = Instance::new("a").unwrap();
         let b = Instance::new("b").unwrap();
         let c = Instance::new("d").unwrap();
-        assert_eq!(ms.check_multi_meta(&mut vec![a.clone()]).is_ok(), true);
-        assert_eq!(ms.check_multi_meta(&mut vec![b.clone()]).is_ok(), true);
-        assert_eq!(ms.check_multi_meta(&mut vec![a.clone(), b.clone()]).is_ok(), true);
-        assert_eq!(ms.check_multi_meta(&mut vec![c.clone()]).is_err(), true);
-        assert_eq!(ms.check_multi_meta(&mut vec![c.clone(), a.clone()]).is_err(), true);
-        assert_eq!(ms.check_multi_meta(&mut vec![a.clone(), c.clone()]).is_err(), true);
-        assert_eq!(ms.check_multi_meta(&mut vec![b.clone(), c.clone()]).is_err(), true);
-        assert_eq!(ms.check_multi_meta(&mut vec![c.clone(), b.clone()]).is_err(), true);
-        assert_eq!(ms.check_multi_meta(&mut vec![a, b, c]).is_err(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![a.clone()], &FromInstance::default()).is_ok(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![b.clone()], &FromInstance::default()).is_ok(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![a.clone(), b.clone()], &FromInstance::default()).is_ok(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![c.clone()], &FromInstance::default()).is_err(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![c.clone(), a.clone()], &FromInstance::default()).is_err(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![a.clone(), c.clone()], &FromInstance::default()).is_err(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![b.clone(), c.clone()], &FromInstance::default()).is_err(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![c.clone(), b.clone()], &FromInstance::default()).is_err(), true);
+        assert_eq!(ms.check_multi_meta(&mut vec![a, b, c], &FromInstance::default()).is_err(), true);
     }
 
     #[test]
@@ -160,7 +162,7 @@ mod test {
         let b = Instance::default();
         let c = Instance::default();
         let ins = &mut vec![a, b, c];
-        let _ = ms.check_multi_meta(ins);
+        let _ = ms.check_multi_meta(ins, &FromInstance::default());
         assert_eq!("B:a:1", ins[0].meta);
         assert_eq!("B:a:1", ins[1].meta);
         assert_eq!("B:a:1", ins[2].meta);
