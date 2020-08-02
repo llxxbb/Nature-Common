@@ -2,6 +2,16 @@ use std::panic::catch_unwind;
 
 use crate::{NatureError, Result, SEPARATOR_INS_PARA};
 
+pub fn append_para(para: &str, part: &str) -> String{
+    if para.is_empty() {
+        return  part.to_string();
+    }
+    if part.is_empty() {
+        return  para.to_string();
+    }
+    para.to_string() + &SEPARATOR_INS_PARA + part
+}
+
 /// The Ok returned:
 /// - .0 : selected
 /// - .1 : remained key
@@ -68,6 +78,17 @@ pub fn make_key_and_para(keys: &Vec<&str>, k_index: &Vec<u8>, sep: &str) -> Resu
     Ok((p, k))
 }
 
+#[cfg(test)]
+mod append_para_test {
+    use super::*;
+    #[test]
+    fn test(){
+        assert_eq!("",append_para("",""));
+        assert_eq!("a",append_para("a",""));
+        assert_eq!("a",append_para("","a"));
+        assert_eq!("a/b",append_para("a","b"));
+    }
+}
 #[cfg(test)]
 mod test {
     use super::*;
