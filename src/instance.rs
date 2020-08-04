@@ -17,6 +17,7 @@ pub static CONTEXT_TARGET_INSTANCE_PARA: &str = "target.para";
 pub static CONTEXT_LOOP_NEXT: &str = "loop.next";
 pub static CONTEXT_LOOP_TASK: &str = "loop.task";
 pub static CONTEXT_LOOP_FINISHED: &str = "loop.finished";
+pub static CONTEXT_DYNAMIC_PARA: &str = "para.dynamic";
 
 /// A snapshot for a particular `Meta`
 #[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
