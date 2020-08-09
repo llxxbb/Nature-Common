@@ -34,7 +34,7 @@ impl From<MetaSettingTemp> for MetaSetting {
                 rtn
             },
             cache_saved: input.cache_saved,
-            output_last: false
+            output_last: input.output_last,
         }
     }
 }
@@ -59,6 +59,7 @@ impl From<MetaSetting> for MetaSettingTemp {
                 rtn
             },
             cache_saved: input.cache_saved,
+            output_last: input.output_last,
         }
     }
 }
@@ -111,6 +112,9 @@ struct MetaSettingTemp {
     #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub cache_saved: bool,
+    #[serde(skip_serializing_if = "is_default")]
+    #[serde(default)]
+    pub output_last: bool,
 }
 
 #[cfg(test)]
