@@ -18,6 +18,9 @@ pub struct MetaSetting {
     pub multi_meta: BTreeSet<String>,
     /// Nature will cache the saved instance for a while, this can increase performance greatly to save same instance, such as to generate a timer instance.
     pub cache_saved: bool,
+    /// only used by `MetaType::Loop`, output the instance only when loop finished.
+    /// This require the multi_meta has only one item
+    pub output_last: bool,
 }
 
 impl From<MetaSettingTemp> for MetaSetting {
@@ -31,6 +34,7 @@ impl From<MetaSettingTemp> for MetaSetting {
                 rtn
             },
             cache_saved: input.cache_saved,
+            output_last: false
         }
     }
 }
@@ -132,6 +136,7 @@ mod test {
             master: None,
             multi_meta: set,
             cache_saved: false,
+            output_last: false
         };
         let a = Instance::new("a").unwrap();
         let b = Instance::new("b").unwrap();
@@ -157,6 +162,7 @@ mod test {
             master: None,
             multi_meta: set,
             cache_saved: false,
+            output_last: false
         };
         let a = Instance::default();
         let b = Instance::default();
