@@ -56,10 +56,7 @@ impl Instance {
     }
 
     pub fn revise(&mut self) -> Result<&mut Self> {
-        let now = Local::now().timestamp_millis();
-        if self.create_time == 0 {
-            self.create_time = now;
-        }
+        self.create_time = Local::now().timestamp_millis();
         if self.para.is_empty() && self.id == 0 {
             self.id = generate_id(&self.data)?;
         }
