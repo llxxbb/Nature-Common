@@ -52,8 +52,7 @@ impl MetaType {
         }
         let x = parts[0];
         if x != format!("{}", &prefix) {
-            let msg = format!("[{}]'s MetaType undefined", meta);
-            warn!("{}", msg);
+            let msg = format!("[{}]'s MetaType unwanted", meta);
             return Err(NatureError::VerifyError(msg.to_string()));
         }
         Ok(())
