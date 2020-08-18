@@ -1,7 +1,7 @@
 use std::collections::btree_set::BTreeSet;
 use std::str::FromStr;
 
-use crate::{Instance, is_default, NatureError, Result, FromInstance};
+use crate::{FromInstance, Instance, is_default, NatureError, Result};
 
 #[derive(Debug, Clone, Default, PartialEq, Ord, PartialOrd, Eq)]
 #[derive(Serialize, Deserialize)]
@@ -18,9 +18,9 @@ pub struct MetaSetting {
     pub multi_meta: BTreeSet<String>,
     /// Nature will cache the saved instance for a while, this can increase performance greatly to save same instance, such as to generate a timer instance.
     pub cache_saved: bool,
-    /// only used by `MetaType::Loop`, output the instance only when loop finished.
-    /// This require the multi_meta has only one item
-    pub output_last: bool,
+    /// only used by `MetaType::Loop`, has only one instance generated when loop finished.
+    /// Requirement: multi_meta should has only one item
+    pub only_one: bool,
 }
 
 impl From<MetaSettingTemp> for MetaSetting {
@@ -34,7 +34,7 @@ impl From<MetaSettingTemp> for MetaSetting {
                 rtn
             },
             cache_saved: input.cache_saved,
-            output_last: input.output_last,
+            only_one: input.only_one,
         }
     }
 }
@@ -59,7 +59,7 @@ impl From<MetaSetting> for MetaSettingTemp {
                 rtn
             },
             cache_saved: input.cache_saved,
-            output_last: input.output_last,
+            only_one: input.only_one,
         }
     }
 }
@@ -114,7 +114,7 @@ struct MetaSettingTemp {
     pub cache_saved: bool,
     #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
-    pub output_last: bool,
+    pub only_one: bool,
 }
 
 #[cfg(test)]
@@ -140,7 +140,7 @@ mod test {
             master: None,
             multi_meta: set,
             cache_saved: false,
-            output_last: false
+            only_one: false,
         };
         let a = Instance::new("a").unwrap();
         let b = Instance::new("b").unwrap();
@@ -166,7 +166,7 @@ mod test {
             master: None,
             multi_meta: set,
             cache_saved: false,
-            output_last: false
+            only_one: false,
         };
         let a = Instance::default();
         let b = Instance::default();

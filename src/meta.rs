@@ -414,7 +414,7 @@ mod verify_test {
             master: None,
             multi_meta: Default::default(),
             cache_saved: false,
-            output_last: false
+            only_one: false
         }.to_json().unwrap();
         let _ = meta.set_setting(&setting);
         let set: Vec<String> = vec!["a".to_string()];
