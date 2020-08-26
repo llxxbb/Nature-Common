@@ -1,10 +1,26 @@
-extern crate fern;
 extern crate chrono;
+extern crate fern;
 
+use std::env;
 use std::io::stdout;
+use std::str::FromStr;
 
-pub fn setup_logger() -> Result<(), fern::InitError> {
-    fern::Dispatch::new()
+use log::LevelFilter;
+
+use crate::{NatureError, Result};
+
+pub fn setup_logger() -> Result<()> {
+    // get log level from env
+    let level = match env::var("LOG_LEVEL").or::<String>(Ok("info".to_string())) {
+        Ok(rtn) => rtn,
+        Err(e) => return Err(NatureError::SystemError(e.to_string()))
+    };
+    let level_filter = match LevelFilter::from_str(&level) {
+        Ok(rtn) => rtn,
+        Err(e) => return Err(NatureError::SystemError(e.to_string()))
+    };
+
+    match fern::Dispatch::new()
         .format(|out, message, record| {
             out.finish(format_args!(
                 "{}[{}][{}] {}",
@@ -14,13 +30,16 @@ pub fn setup_logger() -> Result<(), fern::InitError> {
                 message
             ))
         })
-        .level(log::LevelFilter::Debug)
+        .level(level_filter)
         .level_for("tokio_core", log::LevelFilter::Error)
         .level_for("tokio_reactor", log::LevelFilter::Error)
         .level_for("hyper", log::LevelFilter::Error)
         .chain(stdout())
         .chain(fern::log_file("output.log")?)
-        .apply()?;
-    info!("--------------------logger initialized---------------------");
+        .apply() {
+        Ok(_) => (),
+        Err(e) => return Err(NatureError::SystemError(e.to_string()))
+    };
+    info!("--------------------logger initialized for level : {}---------------------", level);
     Ok(())
 }
