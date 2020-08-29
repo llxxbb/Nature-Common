@@ -1,12 +1,14 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
 use std::iter::Iterator;
 use std::ops::{Deref, DerefMut};
 
 use chrono::prelude::*;
 use futures::Future;
+use itertools::Itertools;
 
-use crate::{FromInstance, generate_id, is_default, KeyCondition, MetaType, NatureError, Result, SEPARATOR_INS_KEY, SEPARATOR_META, TargetState};
+use crate::{FromInstance, generate_id, ID, is_default, KeyCondition, MetaType, NatureError, Result, SEPARATOR_INS_KEY, SEPARATOR_META, TargetState};
 use crate::converter::DynamicConverter;
 
 use super::Meta;
@@ -23,12 +25,12 @@ pub static CONTEXT_LOOP_FINISHED: &str = "loop.finished";
 pub static CONTEXT_DYNAMIC_PARA: &str = "para.dynamic";
 
 /// A snapshot for a particular `Meta`
-#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct Instance {
     /// A unique value used to distinguish other instance
     #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
-    pub id: u128,
+    pub id: ID,
     pub data: BizObject,
     /// When this instance created in db
     #[serde(skip_serializing_if = "is_default")]
@@ -175,6 +177,25 @@ pub struct BizObject {
     #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
     pub para: String,
+}
+
+impl Hash for BizObject {
+    fn hash<H: Hasher>(&self, s: &mut H) {
+        self.meta.hash(s);
+        self.content.hash(s);
+        self.state_version.hash(s);
+        self.from.hash(s);
+        self.para.hash(s);
+        self.context.iter().sorted().for_each(|one| {
+            one.0.hash(s);
+            one.1.hash(s)
+        });
+        self.sys_context.iter().sorted().for_each(|one| {
+            one.0.hash(s);
+            one.1.hash(s);
+        });
+        self.states.iter().sorted().for_each(|one| one.hash(s));
+    }
 }
 
 impl BizObject {

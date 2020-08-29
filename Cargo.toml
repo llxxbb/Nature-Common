@@ -19,12 +19,19 @@ itertools = "0.9"
 actix = "0.9"
 reqwest = "0.10"
 chrono = { version = "0.4", features = ["serde"] }
-uuid = { version = "0.8", features = ["v3"] }
 lazy_static = "1.4"
 futures = "0.3"
+uuid = { version = "0.8", features = ["v3"], optional = true }
 
 # log
 log = "0.4"
 fern = "0.6"        # Simple, efficient logging
+
+[features]
+default = ["id64"]
+#default = ["id128"]
+id128 = ["uuid"]
+id64 = []
+
 
 

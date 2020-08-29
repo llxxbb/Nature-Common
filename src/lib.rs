@@ -7,7 +7,6 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
-extern crate uuid;
 
 pub use callback::*;
 pub use converter::*;
@@ -42,3 +41,9 @@ mod instance_para;
 
 
 pub type Result<T> = std::result::Result<T, NatureError>;
+
+#[cfg(feature = "id64")]
+pub type ID = u64;
+
+#[cfg(feature = "id128")]
+pub type ID = u128;

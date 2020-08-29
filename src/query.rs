@@ -1,4 +1,4 @@
-use crate::{FromInstance, Instance, is_default, is_one, one, SEPARATOR_INS_KEY};
+use crate::{FromInstance, ID, Instance, is_default, is_one, one, SEPARATOR_INS_KEY};
 
 /// used for query instance by id
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -35,7 +35,7 @@ pub struct KeyCondition {
 }
 
 impl KeyCondition {
-    pub fn new(id: u128, meta: &str, para: &str, state_version: i32) -> Self {
+    pub fn new(id: ID, meta: &str, para: &str, state_version: i32) -> Self {
         KeyCondition {
             id: format!("{:x}", id),
             meta: meta.to_string(),
@@ -103,7 +103,7 @@ impl From<&FromInstance> for KeyCondition {
 /// used for query instance by id
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct IDAndFrom {
-    pub id: u128,
+    pub id: ID,
     pub meta: String,
     pub from_key: String,
 }
@@ -131,4 +131,29 @@ pub struct QueryByMeta {
     #[serde(default)]
     pub create_time_desc: bool,
 
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    #[ignore]
+    fn key_condition_test() {
+        let condition = KeyCondition {
+            id: "$id".to_string(),
+            meta: "$meta".to_string(),
+            key_gt: "".to_string(),
+            key_ge: "".to_string(),
+            key_lt: "".to_string(),
+            key_le: "".to_string(),
+            para: "".to_string(),
+            state_version: 1,
+            time_ge: None,
+            time_lt: None,
+            limit: 1,
+        };
+        let result = serde_json::to_string(&condition).unwrap();
+        dbg!(result);
+    }
 }

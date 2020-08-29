@@ -1,10 +1,10 @@
 use std::str::FromStr;
 
-use crate::{Instance, is_default, NatureError, Result, SEPARATOR_INS_KEY};
+use crate::{ID, id_from_hex_str, Instance, is_default, NatureError, Result, SEPARATOR_INS_KEY};
 
-#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct FromInstance {
-    pub id: u128,
+    pub id: ID,
     pub meta: String,
     #[serde(skip_serializing_if = "is_default")]
     #[serde(default)]
@@ -21,7 +21,7 @@ impl FromInstance {
             return Err(NatureError::VerifyError("format error".to_string()));
         }
         let rtn = FromInstance {
-            id: u128::from_str_radix(part[1], 16)?,
+            id: id_from_hex_str(part[1])?,
             meta: part[0].to_string(),
             para: part[2].to_string(),
             state_version: 0,
@@ -51,7 +51,7 @@ impl FromStr for FromInstance {
             return Err(NatureError::VerifyError(msg));
         }
         let rtn = FromInstance {
-            id: u128::from_str_radix(part[1], 16)?,
+            id: id_from_hex_str(part[1])?,
             meta: part[0].to_string(),
             para: part[2].to_string(),
             state_version: i32::from_str(part[3])?,
